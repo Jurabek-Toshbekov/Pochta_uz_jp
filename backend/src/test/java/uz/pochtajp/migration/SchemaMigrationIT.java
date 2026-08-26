@@ -17,13 +17,53 @@ import uz.pochtajp.support.AbstractIntegrationTest;
 class SchemaMigrationIT extends AbstractIntegrationTest {
 
     @Test
-    @DisplayName("Uch migratsiya ham muvaffaqiyatli qo'llangan")
+    @DisplayName("Barcha migratsiyalar muvaffaqiyatli qo'llangan")
     void allMigrationsApplied() {
         List<String> versions = jdbcTemplate.queryForList(
                 "SELECT version FROM flyway_schema_history WHERE success = true ORDER BY installed_rank",
                 String.class);
 
-        assertThat(versions).containsExactly("1", "2", "3");
+        assertThat(versions).containsExactly("1", "2", "3", "4");
+    }
+
+    @Test
+    @DisplayName("Matn qidiruvi tayyor: unaccent, konfiguratsiya, ustun, trigger, indeks (§10.2)")
+    void textSearchIsReady() {
+        Integer extension = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM pg_extension WHERE extname = 'unaccent'", Integer.class);
+        assertThat(extension).isEqualTo(1);
+
+        Integer config = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM pg_ts_config WHERE cfgname = 'pochta_simple'", Integer.class);
+        assertThat(config).isEqualTo(1);
+
+        String columnType = jdbcTemplate.queryForObject("""
+                SELECT udt_name FROM information_schema.columns
+                WHERE table_name = 'posts' AND column_name = 'search_vector'
+                """, String.class);
+        assertThat(columnType).isEqualTo("tsvector");
+
+        Integer trigger = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM pg_trigger
+                WHERE tgname = 'trg_posts_search_vector' AND NOT tgisinternal
+                """, Integer.class);
+        assertThat(trigger).isEqualTo(1);
+
+        Integer index = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM pg_indexes
+                WHERE tablename = 'posts' AND indexname = 'idx_posts_search_vector'
+                """, Integer.class);
+        assertThat(index).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Kontakt ochilishi bir foydalanuvchi uchun bir marta — UNIQUE indeks bor")
+    void contactRevealIsUniquePerViewer() {
+        Integer index = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM pg_indexes
+                WHERE tablename = 'contact_reveals' AND indexname = 'idx_reveal_post_viewer'
+                """, Integer.class);
+        assertThat(index).isEqualTo(1);
     }
 
     @Test
