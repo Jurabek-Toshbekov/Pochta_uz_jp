@@ -44,4 +44,5 @@ secrets/
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
 npm-debug.log*
