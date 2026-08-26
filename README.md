@@ -8,8 +8,8 @@ Uni o'qimasdan kod yozilmaydi.
 
 | Qism | Papka | Holat |
 |---|---|---|
-| Backend (Spring Boot 3.3, Java 17) | `backend/` | 0-bosqich tugadi |
-| Mini App (React + Vite + TS) | `miniapp/` | 1-bosqich |
+| Backend (Spring Boot 3.3, Java 17) | `backend/` | 0- va 1-bosqich tugadi |
+| Mini App (React + Vite + TS) | `miniapp/` | 1-bosqich tugadi |
 | Admin dashboard (React + Vite + TS) | `admin/` | 4-bosqich |
 | Hujjatlar | `docs/` | [EVENTS.md](docs/EVENTS.md), [METRICS.md](docs/METRICS.md) |
 
@@ -53,11 +53,33 @@ DB_USERNAME=postgres DB_PASSWORD=... BOT_TOKEN=... \
 Flyway migratsiyalarni o'zi qo'llaydi. `ddl-auto=validate` — Hibernate sxemani
 **o'zgartirmaydi**, faqat tekshiradi (§1.3).
 
+### Mini App
+
+```bash
+cd miniapp
+cp .env.example .env          # VITE_API_BASE_URL ni backend manzilingizga qo'ying
+npm install
+npm run dev                   # http://localhost:5173
+```
+
+Telegram tashqarisida brauzerda ochilsa `initData` bo'lmaydi va API 401 qaytaradi —
+bu kutilgan holat (§7.1). To'liq sinash uchun @BotFather'da Mini App URL'ini sozlab,
+botdan oching (dev'da `ngrok` yoki `cloudflared` bilan tunnel).
+
+```bash
+npm run lint                  # tsc --noEmit
+npm run test                  # Vitest
+npm run build                 # dist/ ≈98 KB gzip (§9.5 chegarasi 200 KB)
+```
+
 ## 3. Testlar
 
 ```bash
 cd backend
-./mvnw test
+./mvnw test                   # 65 test: unit + Testcontainers integratsiya
+
+cd ../miniapp
+npm run test                  # 22 test: forma mapping, i18n, checklist gating
 ```
 
 Integratsiya testlari Testcontainers orqali haqiqiy PostgreSQL 16 ko'taradi, ya'ni
@@ -140,7 +162,12 @@ To'liq ro'yxat — `CLAUDE.md` §12. Hozir mavjud:
 | Endpoint | Auth | Tavsif |
 |---|---|---|
 | `GET /health` | yo'q | salomatlik tekshiruvi |
-| `POST /api/miniapp/events` | `Authorization: tma <initData>` | analitika event batch'i |
+| `POST /api/miniapp/session` | `Authorization: tma <initData>` | profil, ToS/Privacy roziligi, til, `start_param` |
+| `GET /api/miniapp/reference` | initData | aeroport, kategoriya, koridor (1 soat kesh) |
+| `POST /api/miniapp/posts` | initData | e'lon yaratish va kanalga chiqarish |
+| `GET /api/miniapp/my/posts[/{id}]` | initData | faqat o'z e'lonlari |
+| `GET/PUT/DELETE /api/miniapp/drafts` | initData | forma autosave |
+| `POST /api/miniapp/events` | initData | analitika event batch'i |
 
 Mini App'ning **har bir** so'rovi `initData` HMAC imzosi bilan tekshiriladi (§7.1).
 `user_id` request body'dan olinmaydi — faqat imzolangan `initData`dan.

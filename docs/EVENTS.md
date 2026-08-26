@@ -132,6 +132,7 @@ hisoblari shu jadvaldan o'qiladi.
 | `EventLogger` (async, PII filtri) | ✅ `analytics/EventLogger.java` |
 | `POST /api/miniapp/events` | ✅ `api/miniapp/EventController.java` |
 | `rate_limit_hit` | ✅ `service/RateLimitService.java` |
-| Voronka event'lari (klient) | ⏳ 1-bosqich (Mini App) |
+| Voronka event'lari (klient) | ✅ `miniapp/src/analytics/` — batch 10/5s, PII manbada ham yuborilmaydi |
+| `post_submit` / `post_publish_*` (server) | ✅ `PostService`, `PublishService` |
 | Qidiruv event'lari | ⏳ 3-bosqich |
 | `daily_metrics` agregati | ⏳ 4-bosqich |

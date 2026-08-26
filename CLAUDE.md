@@ -983,15 +983,15 @@ GET    /health
 
 ### 1-bosqich — Mini App (e'lon berish)
 - [x] `TelegramInitDataValidator` + Spring Security filtri (0-bosqichda bajarildi — §1.4 talab qildi)
-- [ ] `/api/miniapp/session`, `/reference`, `/posts` (POST), `/drafts`
-- [ ] React + Vite + TS skeleton, `@twa-dev/sdk` ulash
-- [ ] Dizayn tokenlari (§9.4), shriftlar, boarding-pass karta komponenti
-- [ ] 4 qadamli forma + validatsiya + draft autosave
-- [ ] Xavfsizlik checklist ekrani (§7.3)
-- [ ] Preview + publish → `PublishService` kanalga yuboradi
-- [ ] Muvaffaqiyat ekrani + ulashish
-- [ ] i18n: uz-latn / uz-cyrl / ru
-- [ ] Voronka event'lari to'liq ulangan
+- [x] `/api/miniapp/session`, `/reference`, `/posts` (POST), `/drafts` (+ `/my/posts`)
+- [x] React + Vite + TS skeleton, `@twa-dev/sdk` ulash
+- [x] Dizayn tokenlari (§9.4), shriftlar, boarding-pass karta komponenti
+- [x] 4 qadamli forma + validatsiya + draft autosave
+- [x] Xavfsizlik checklist ekrani (§7.3)
+- [x] Preview + publish → `PublishService` kanalga yuboradi
+- [x] Muvaffaqiyat ekrani + ulashish (hanko muhri animatsiyasi bilan)
+- [x] i18n: uz-latn / uz-cyrl / ru
+- [x] Voronka event'lari to'liq ulangan
 
 ### 2-bosqich — Botni soddalashtirish
 - [ ] Barcha step-based kod olib tashlanadi (`stepNumber` mantiqi butunlay)

@@ -1,0 +1,290 @@
+/* Umumiy UI qismlari. Hech qanday gradient, hech qanday soya —
+   faqat hairline chiziqlar (§9.4, §11.3 ruhida). */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.error {
+  font-size: var(--text-xs);
+  color: var(--hanko);
+}
+
+.inputError {
+  border-color: var(--hanko);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rowFill > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Segment control --- */
+.segmented {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.segment {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  min-height: 44px;
+}
+
+.segment + .segment {
+  border-left: 1px solid var(--line);
+}
+
+.segmentActive {
+  background: var(--indigo);
+  color: #fff;
+}
+
+/* --- Katta tanlov kartasi (1-qadam) --- */
+.choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  color: var(--text);
+}
+
+.choiceActive {
+  border-color: var(--indigo);
+  box-shadow: inset 0 0 0 1px var(--indigo);
+}
+
+.choiceTitle {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.choiceHint {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* --- Chip --- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: var(--text-sm);
+  min-height: 40px;
+}
+
+.chipActive {
+  border-color: var(--indigo);
+  background: var(--indigo);
+  color: #fff;
+}
+
+/* --- Progress (qadamlar) --- */
+.progress {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.progressBar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.progressBarDone {
+  background: var(--indigo);
+}
+
+.progressLabel {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* --- Ogohlantirish --- */
+.notice {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--hanko);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--surface);
+  font-size: var(--text-sm);
+}
+
+.noticeTitle {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+/* --- Checkbox qatori --- */
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 0;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--indigo);
+}
+
+/* --- Holatlar --- */
+.state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.button {
+  border: 1px solid var(--indigo);
+  background: var(--indigo);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-weight: 500;
+  min-height: 46px;
+}
+
+.buttonGhost {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-weight: 500;
+  min-height: 46px;
+}
+
+/* --- Aeroport ro'yxati --- */
+.airportList {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.airportItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  min-height: 44px;
+}
+
+.airportItem + .airportItem {
+  border-top: 1px solid var(--line);
+}
+
+.airportItemActive {
+  background: var(--surface-sunken);
+}
+
+.airportCode {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  min-width: 42px;
+}
+
+.airportCity {
+  font-size: var(--text-sm);
+}
+
+.airportName {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.groupLabel {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 12px 4px;
+}
+
+/* Qadamlar orasidagi gorizontal siljish — 200ms (§9.4) */
+.slide {
+  animation: slide var(--motion-step) var(--ease) both;
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

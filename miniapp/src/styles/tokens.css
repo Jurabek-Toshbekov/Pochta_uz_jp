@@ -1,0 +1,83 @@
+/* =====================================================================
+   Dizayn tokenlari — CLAUDE.md §9.4
+   Kontseptsiya: "boarding pass". Ranglar suzani indigosi va hanko qizilidan.
+   ===================================================================== */
+
+:root {
+  /* --- Brend ranglari --- */
+  --ink: #101a2b;      /* asosiy matn, quyuq yuzalar — indigo tun */
+  --indigo: #2c4a8c;   /* asosiy harakat tugmasi */
+  --hanko: #d2352c;    /* muhr qizili — FAQAT publish muhri va o'chirish */
+  --mist: #7c8899;     /* ikkilamchi matn */
+  --paper: #f2f4f7;    /* sovuq qog'oz, och tema foni */
+  --line: #dce1e8;     /* chegaralar, perforatsiya */
+
+  --surface: #ffffff;
+  --surface-sunken: var(--paper);
+  --text: var(--ink);
+  --text-muted: var(--mist);
+
+  /* --- Tipografiya (§9.4 shkalasi) --- */
+  --font-ui: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-2xl: 40px;
+
+  /* --- Layout --- */
+  --gutter: 16px;
+  --gap-card: 12px;
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  /* --- Harakat: faqat ikki joyda (§9.4) --- */
+  --motion-step: 200ms;
+  --motion-stamp: 400ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Qorong'i tema: --paper va --ink almashadi, --indigo yorishadi. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --indigo: #5b7fd1;
+    --paper: #101a2b;
+    --ink: #f2f4f7;
+    --line: #29344a;
+    --mist: #8d99ab;
+
+    --surface: #182338;
+    --surface-sunken: #101a2b;
+    --text: #f2f4f7;
+    --text-muted: var(--mist);
+  }
+}
+
+/* Telegram temasi bergan qiymatlar mavjud bo'lsa fonni unga moslashtiramiz
+   (§9.3 — themeParams). Matn ranglari brend tokenlarida qoladi. */
+:root[data-tg-theme='dark'] {
+  --indigo: #5b7fd1;
+  --paper: #101a2b;
+  --ink: #f2f4f7;
+  --line: #29344a;
+  --mist: #8d99ab;
+  --surface: #182338;
+  --surface-sunken: #101a2b;
+  --text: #f2f4f7;
+  --text-muted: var(--mist);
+}
+
+:root[data-tg-theme='light'] {
+  --indigo: #2c4a8c;
+  --paper: #f2f4f7;
+  --ink: #101a2b;
+  --line: #dce1e8;
+  --mist: #7c8899;
+  --surface: #ffffff;
+  --surface-sunken: #f2f4f7;
+  --text: #101a2b;
+  --text-muted: #7c8899;
+}
