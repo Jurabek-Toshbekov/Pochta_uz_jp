@@ -8,7 +8,7 @@ Uni o'qimasdan kod yozilmaydi.
 
 | Qism | Papka | Holat |
 |---|---|---|
-| Backend (Spring Boot 3.3, Java 17) | `backend/` | 0- va 1-bosqich tugadi |
+| Backend + bot (Spring Boot 3.3, Java 17) | `backend/` | 0–2-bosqich tugadi |
 | Mini App (React + Vite + TS) | `miniapp/` | 1-bosqich tugadi |
 | Admin dashboard (React + Vite + TS) | `admin/` | 4-bosqich |
 | Hujjatlar | `docs/` | [EVENTS.md](docs/EVENTS.md), [METRICS.md](docs/METRICS.md) |
@@ -76,7 +76,7 @@ npm run build                 # dist/ ≈98 KB gzip (§9.5 chegarasi 200 KB)
 
 ```bash
 cd backend
-./mvnw test                   # 65 test: unit + Testcontainers integratsiya
+./mvnw test                   # 101 test: unit + Testcontainers integratsiya
 
 cd ../miniapp
 npm run test                  # 22 test: forma mapping, i18n, checklist gating
@@ -155,7 +155,48 @@ kesh'langan commit'larni tozalashni so'rash kerak.
 
 ---
 
-## 5. API
+## 5. Bot
+
+Bot **forma to'ldirmaydi**. Uning ishi: kutib olish, tushuntirish, Mini App'ga
+yo'naltirish, xabar berish (§8).
+
+| Buyruq | Nima qiladi |
+|---|---|
+| `/start` | Salomlashish + WebApp tugmalari |
+| `/elon` | Mini App'ni e'lon berish ekranida ochadi |
+| `/qidiruv` | Mini App qidiruv ekrani |
+| `/mening_elonlarim` | Mini App "Mening e'lonlarim" |
+| `/obuna` | Xabarnoma obunalari (5-bosqichda ishga tushadi) |
+| `/xavfsizlik` | Taqiqlangan buyumlar va xavfsizlik qoidalari |
+| `/qoidalar` | Qoidalar va foydalanish shartlari |
+| `/til` | uz-latn / uz-cyrl / ru |
+| `/yordam` | Ko'p so'raladigan savollar |
+| `/mening_malumotlarim` | Ma'lumot eksporti (JSON) va o'chirish |
+
+### Rejimlar
+
+`BOT_MODE` bilan boshqariladi:
+
+- `polling` — lokal ishlab chiqish. Ishga tushishda webhook o'chiriladi.
+- `webhook` — prod. `WEBHOOK_BASE_URL` va `WEBHOOK_SECRET_TOKEN` kerak.
+  Telegram `POST /webhook/telegram/{secret}` ga yozadi; sir **yo'lda ham,
+  `X-Telegram-Bot-Api-Secret-Token` headerida ham** tekshiriladi (§7.2).
+- `off` — bot ishga tushmaydi (testlar, faqat API kerak bo'lgan holat).
+
+Token yaroqsiz bo'lsa ilova **to'xtamaydi** — API va Mini App ishlashda davom
+etadi, xato log'da qoladi.
+
+### Ma'lumot o'chirish nima qiladi
+
+`/mening_malumotlarim` → o'chirish tasdiqlangach:
+
+- ism, familiya, username, telefon va e'lonlardagi kontaktlar tozalanadi
+- `users.deleted_at` qo'yiladi — **qator o'chirilmaydi** (§1.1)
+- faol e'lonlar `CLOSED` bo'ladi, obunalar o'chadi
+- event'lar va analitika joyida qoladi — ularda PII yo'q (§1.7)
+- `audit_log`ga yozib qo'yiladi
+
+## 6. API
 
 To'liq ro'yxat — `CLAUDE.md` §12. Hozir mavjud:
 
@@ -172,7 +213,7 @@ To'liq ro'yxat — `CLAUDE.md` §12. Hozir mavjud:
 Mini App'ning **har bir** so'rovi `initData` HMAC imzosi bilan tekshiriladi (§7.1).
 `user_id` request body'dan olinmaydi — faqat imzolangan `initData`dan.
 
-## 6. Konvensiyalar
+## 7. Konvensiyalar
 
 - Kod English, izohlar va UI matnlari o'zbekcha.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`.

@@ -3,7 +3,6 @@ package uz.pochtajp.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -26,8 +25,8 @@ public class TelegramChannelPublisher implements ChannelPublisher {
     private final TelegramClient telegramClient;
     private final String channelChatId;
 
-    public TelegramChannelPublisher(BotProperties botProperties) {
-        this.telegramClient = new OkHttpTelegramClient(botProperties.token());
+    public TelegramChannelPublisher(TelegramClient telegramClient, BotProperties botProperties) {
+        this.telegramClient = telegramClient;
         this.channelChatId = botProperties.channelChatId();
     }
 

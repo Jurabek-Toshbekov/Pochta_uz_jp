@@ -32,6 +32,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      BOT_MODE: ${BOT_MODE:-polling}
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-pochta}
       DB_USERNAME: ${POSTGRES_USER:-pochta}
       DB_PASSWORD: ${POSTGRES_PASSWORD}

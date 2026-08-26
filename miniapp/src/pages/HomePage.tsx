@@ -49,7 +49,7 @@ export function HomePage() {
           label={`🔍 ${t.home.search}`}
           onClick={() => {
             track(EV.SEARCH_OPEN, { entry_point: 'home' });
-            window.alert(t.home.searchSoon);
+            navigate('/search');
           }}
         />
       </div>

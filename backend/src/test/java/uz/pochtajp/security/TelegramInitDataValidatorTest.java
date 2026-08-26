@@ -9,6 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uz.pochtajp.common.exception.InitDataInvalidException;
+import uz.pochtajp.config.BotMode;
 import uz.pochtajp.config.BotProperties;
 import uz.pochtajp.support.InitDataFactory;
 
@@ -22,7 +23,7 @@ class TelegramInitDataValidatorTest {
     private static final long TELEGRAM_ID = 555_000_111L;
 
     private final TelegramInitDataValidator validator = new TelegramInitDataValidator(
-            new BotProperties(BOT_TOKEN, "test_bot", null, null, null, 86_400L),
+            new BotProperties(BOT_TOKEN, "test_bot", null, null, null, 86_400L, BotMode.OFF, null, null),
             new ObjectMapper());
 
     @Test

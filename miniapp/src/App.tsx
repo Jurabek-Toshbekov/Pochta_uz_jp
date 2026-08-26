@@ -11,6 +11,7 @@ import { HomePage } from './pages/HomePage';
 import { MyPostsPage } from './pages/MyPostsPage';
 import { NewPostPage } from './pages/NewPostPage';
 import { PreviewPage } from './pages/PreviewPage';
+import { SearchPage } from './pages/SearchPage';
 import { SuccessPage } from './pages/SuccessPage';
 
 /**
@@ -88,6 +89,7 @@ export function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/new" element={<NewPostPage />} />
       <Route path="/new/preview" element={<PreviewPage />} />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="/my" element={<MyPostsPage />} />
       <Route path="/success/:postId" element={<SuccessPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

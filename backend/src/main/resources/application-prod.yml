@@ -1,4 +1,6 @@
 # Prod profili. Bot webhook rejimida ishlaydi (§13, 2-bosqich).
+bot:
+  mode: ${BOT_MODE:webhook}
 spring:
   jpa:
     show-sql: false

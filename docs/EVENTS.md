@@ -134,5 +134,6 @@ hisoblari shu jadvaldan o'qiladi.
 | `rate_limit_hit` | ✅ `service/RateLimitService.java` |
 | Voronka event'lari (klient) | ✅ `miniapp/src/analytics/` — batch 10/5s, PII manbada ham yuborilmaydi |
 | `post_submit` / `post_publish_*` (server) | ✅ `PostService`, `PublishService` |
+| `bot_command`, `deep_link_open`, `language_changed` (bot) | ✅ `bot/BotUpdateHandler.java` |
 | Qidiruv event'lari | ⏳ 3-bosqich |
 | `daily_metrics` agregati | ⏳ 4-bosqich |

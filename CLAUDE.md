@@ -994,14 +994,14 @@ GET    /health
 - [x] Voronka event'lari to'liq ulangan
 
 ### 2-bosqich — Botni soddalashtirish
-- [ ] Barcha step-based kod olib tashlanadi (`stepNumber` mantiqi butunlay)
-- [ ] Yangi buyruqlar (§8.1), matnlar (§8.2)
-- [ ] WebApp tugmalari
-- [ ] Deep link (`startapp`) qo'llab-quvvatlash
-- [ ] Erkin matn va mediaga muloyim javob
-- [ ] Webhook rejimi (prod), long polling (dev)
-- [ ] Kanal post shabloni (§8.4)
-- [ ] `/mening_malumotlarim` — eksport va o'chirish
+- [x] Barcha step-based kod olib tashlanadi (`stepNumber` mantiqi butunlay)
+- [x] Yangi buyruqlar (§8.1), matnlar (§8.2) — uch tilda
+- [x] WebApp tugmalari (Mini App HashRouter marshrutlariga to'g'ridan-to'g'ri)
+- [x] Deep link (`startapp` — Mini App; `?start=` — bot) qo'llab-quvvatlash
+- [x] Erkin matn va mediaga muloyim javob
+- [x] Webhook rejimi (prod), long polling (dev) — `BOT_MODE`
+- [x] Kanal post shabloni (§8.4) — 1-bosqichda bajarildi
+- [x] `/mening_malumotlarim` — eksport va o'chirish
 
 ### 3-bosqich — Qidiruv
 - [ ] `GET /posts` to'liq filtrlar + keyset pagination

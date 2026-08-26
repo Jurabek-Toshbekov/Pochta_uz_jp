@@ -29,7 +29,8 @@ import org.testcontainers.utility.DockerImageName;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import({AbstractIntegrationTest.SyncAsyncConfig.class, StubChannelPublisher.Config.class})
+@Import({AbstractIntegrationTest.SyncAsyncConfig.class, StubChannelPublisher.Config.class,
+        StubBotMessenger.Config.class})
 public abstract class AbstractIntegrationTest {
 
     /** Testdagi soxta bot tokeni. Real token hech qachon testda ishlatilmaydi (§1.2). */
@@ -54,6 +55,9 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected StubChannelPublisher channelPublisher;
 
+    @Autowired
+    protected StubBotMessenger botMessenger;
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
@@ -67,6 +71,9 @@ public abstract class AbstractIntegrationTest {
         registry.add("bot.channel-chat-id", () -> "-1001111111111");
         registry.add("bot.channel-username", () -> "jpuzbpochta_test");
         registry.add("bot.miniapp-url", () -> "https://app.example.test");
+        // Testlarda bot Telegram'ga ulanmaydi.
+        registry.add("bot.mode", () -> "off");
+        registry.add("bot.webhook-secret-token", () -> "test-webhook-secret");
     }
 
     /**
@@ -79,6 +86,7 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void resetState() {
         channelPublisher.reset();
+        botMessenger.reset();
         jdbcTemplate.execute("""
                 TRUNCATE TABLE events, search_queries, contact_reveals, notifications_sent,
                     notification_subscriptions, moderation_actions, reports, reviews,

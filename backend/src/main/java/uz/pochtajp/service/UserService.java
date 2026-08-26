@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.pochtajp.api.miniapp.dto.SessionRequest;
 import uz.pochtajp.common.exception.ForbiddenException;
 import uz.pochtajp.common.exception.NotFoundException;
 import uz.pochtajp.config.AppProperties;
@@ -17,11 +18,13 @@ import uz.pochtajp.domain.enums.UserRole;
 import uz.pochtajp.domain.enums.UserStatus;
 import uz.pochtajp.repository.UserRepository;
 import uz.pochtajp.security.TelegramInitData;
-import uz.pochtajp.api.miniapp.dto.SessionRequest;
 import uz.pochtajp.security.TelegramWebAppUser;
 
 /**
- * Foydalanuvchi yozuvini {@code initData}dan yaratadi va yangilaydi (§7.1, 7-qadam).
+ * Foydalanuvchi yozuvini Telegram profilidan yaratadi va yangilaydi.
+ *
+ * <p>Ikki kirish nuqtasi bir xil mantiqdan foydalanadi:
+ * Mini App ({@code initData}, §7.1) va bot (update ichidagi {@code from}).
  *
  * <p>Log'ga ism va telefon yozilmaydi — faqat {@code user_id} (§1.7).
  */
@@ -37,7 +40,7 @@ public class UserService {
 
     /**
      * {@code last_seen_at} shu oynadan tez-tez yangilanmaydi: aks holda har bir
-     * API so'rovi `users` jadvaliga UPDATE beradi. Hibernate o'zgarmagan
+     * API so'rovi {@code users} jadvaliga UPDATE beradi. Hibernate o'zgarmagan
      * entity uchun UPDATE yubormaydi, ya'ni oyna ichida yozish umuman bo'lmaydi.
      * Admin panelidagi "oxirgi faollik" uchun 5 daqiqa aniqligi yetarli (§11.2).
      */
@@ -51,6 +54,21 @@ public class UserService {
         this.appProperties = appProperties;
     }
 
+    /** Telegram bergan profil — manbadan qat'i nazar bir xil shakl. */
+    public record TelegramProfile(
+            long telegramId,
+            String username,
+            String firstName,
+            String lastName,
+            String languageCode,
+            boolean premium
+    ) {
+    }
+
+    /** Upsert natijasi. */
+    public record Session(User user, boolean created) {
+    }
+
     /**
      * Telegram foydalanuvchisini topadi yoki yaratadi va profil ma'lumotini yangilaydi.
      * BLOCKED foydalanuvchi ishlashga qo'yilmaydi.
@@ -58,15 +76,12 @@ public class UserService {
      * @return foydalanuvchi va u shu so'rovda yaratilgani ({@code is_first_open} eventi uchun)
      */
     @Transactional
-    public Session upsertFromInitData(TelegramInitData initData) {
-        TelegramWebAppUser tgUser = initData.user();
-        long telegramId = tgUser.id();
-
+    public Session upsert(TelegramProfile profile, String referralSource) {
         boolean[] created = {false};
-        User user = userRepository.findByTelegramId(telegramId)
+        User user = userRepository.findByTelegramId(profile.telegramId())
                 .orElseGet(() -> {
                     created[0] = true;
-                    return createUser(telegramId, initData);
+                    return createUser(profile, referralSource);
                 });
 
         if (user.getStatus() == UserStatus.BLOCKED) {
@@ -74,24 +89,34 @@ public class UserService {
             throw new ForbiddenException("Hisobingiz bloklangan. Sabab bo'yicha /yordam ga murojaat qiling.");
         }
 
-        applyTelegramProfile(user, tgUser);
+        applyTelegramProfile(user, profile);
         Instant now = Instant.now();
         if (user.getLastSeenAt() == null || user.getLastSeenAt().plus(LAST_SEEN_THROTTLE).isBefore(now)) {
             user.setLastSeenAt(now);
         }
-        if (user.getReferralSource() == null && initData.startParam() != null) {
-            user.setReferralSource(trim(initData.startParam(), REFERRAL_MAX));
+        if (user.getReferralSource() == null && referralSource != null) {
+            user.setReferralSource(trim(referralSource, REFERRAL_MAX));
         }
         // ADMIN_TELEGRAM_IDS ro'yxatidagilar avtomatik ADMIN bo'ladi (§11.1).
-        if (user.getRole() == UserRole.USER && appProperties.isAdmin(telegramId)) {
+        if (user.getRole() == UserRole.USER && appProperties.isAdmin(profile.telegramId())) {
             user.setRole(UserRole.ADMIN);
             log.info("Foydalanuvchiga ADMIN roli berildi: user_id={}", user.getId());
         }
         return new Session(userRepository.save(user), created[0]);
     }
 
-    /** Upsert natijasi. */
-    public record Session(User user, boolean created) {
+    /** Mini App yo'li (§7.1, 7-qadam). */
+    @Transactional
+    public Session upsertFromInitData(TelegramInitData initData) {
+        TelegramWebAppUser tgUser = initData.user();
+        TelegramProfile profile = new TelegramProfile(
+                tgUser.id(),
+                tgUser.username(),
+                tgUser.firstName(),
+                tgUser.lastName(),
+                tgUser.languageCode(),
+                Boolean.TRUE.equals(tgUser.isPremium()));
+        return upsert(profile, initData.startParam());
     }
 
     /**
@@ -117,6 +142,19 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /** {@code /til} buyrug'i (§8.1). */
+    @Transactional
+    public User setUiLanguage(UUID userId, String uiLanguage) {
+        User user = getActiveForUpdate(userId);
+        user.setUiLanguage(uiLanguage);
+        return userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public User getActive(UUID userId) {
+        return getActiveForUpdate(userId);
+    }
+
     private User getActiveForUpdate(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi."));
@@ -126,25 +164,15 @@ public class UserService {
         return user;
     }
 
-    @Transactional(readOnly = true)
-    public User getActive(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi."));
-        if (user.getDeletedAt() != null) {
-            throw new NotFoundException("Foydalanuvchi topilmadi.");
-        }
-        return user;
-    }
-
-    private User createUser(long telegramId, TelegramInitData initData) {
+    private User createUser(TelegramProfile profile, String referralSource) {
         User user = new User();
-        user.setTelegramId(telegramId);
+        user.setTelegramId(profile.telegramId());
         Instant now = Instant.now();
         user.setFirstSeenAt(now);
         user.setLastSeenAt(now);
-        user.setUiLanguage(resolveUiLanguage(initData.user().languageCode()));
-        if (initData.startParam() != null) {
-            user.setReferralSource(trim(initData.startParam(), REFERRAL_MAX));
+        user.setUiLanguage(resolveUiLanguage(profile.languageCode()));
+        if (referralSource != null) {
+            user.setReferralSource(trim(referralSource, REFERRAL_MAX));
         }
         try {
             User saved = userRepository.saveAndFlush(user);
@@ -152,17 +180,21 @@ public class UserService {
             return saved;
         } catch (DataIntegrityViolationException ex) {
             // Bir vaqtda ikkita so'rov kelsa — telegram_id UNIQUE tutib qoladi.
-            Optional<User> existing = userRepository.findByTelegramId(telegramId);
+            Optional<User> existing = userRepository.findByTelegramId(profile.telegramId());
             return existing.orElseThrow(() -> ex);
         }
     }
 
-    private void applyTelegramProfile(User user, TelegramWebAppUser tgUser) {
-        user.setUsername(trim(tgUser.username(), USERNAME_MAX));
-        user.setFirstName(trim(tgUser.firstName(), NAME_MAX));
-        user.setLastName(trim(tgUser.lastName(), NAME_MAX));
-        user.setLanguageCode(trim(tgUser.languageCode(), LANGUAGE_MAX));
-        user.setTelegramPremium(Boolean.TRUE.equals(tgUser.isPremium()));
+    private void applyTelegramProfile(User user, TelegramProfile profile) {
+        // Ma'lumotini o'chirishni so'ragan foydalanuvchiga ismi qaytarilmaydi (§7.2).
+        if (user.getDeletedAt() != null) {
+            return;
+        }
+        user.setUsername(trim(profile.username(), USERNAME_MAX));
+        user.setFirstName(trim(profile.firstName(), NAME_MAX));
+        user.setLastName(trim(profile.lastName(), NAME_MAX));
+        user.setLanguageCode(trim(profile.languageCode(), LANGUAGE_MAX));
+        user.setTelegramPremium(profile.premium());
     }
 
     /** Telegram tilidan boshlang'ich UI tili: ru -> ru, qolgani -> uz (§8.1 /til). */

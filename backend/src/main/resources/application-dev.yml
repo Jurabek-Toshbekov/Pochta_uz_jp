@@ -1,4 +1,6 @@
 # Lokal ishlab chiqish profili. Bot long polling rejimida ishlaydi (§13, 2-bosqich).
+bot:
+  mode: ${BOT_MODE:polling}
 spring:
   jpa:
     show-sql: false

@@ -80,6 +80,10 @@ bot:
   channel-username: ${CHANNEL_USERNAME:}
   miniapp-url: ${MINIAPP_URL:}
   init-data-max-age-seconds: ${INITDATA_MAX_AGE_SECONDS:86400}
+  # polling (dev) | webhook (prod) | off
+  mode: ${BOT_MODE:polling}
+  webhook-base-url: ${WEBHOOK_BASE_URL:}
+  webhook-secret-token: ${WEBHOOK_SECRET_TOKEN:}
 
 # --- Ilova sozlamalari (AppProperties) ---
 app:
