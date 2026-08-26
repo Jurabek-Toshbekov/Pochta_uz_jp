@@ -196,6 +196,36 @@ class PostControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("Yakuniy manzil kelish shahri bilan bir xil bo'lsa takrorlanmaydi")
+    void doesNotRepeatFinalDestination() throws Exception {
+        submit(validCarryBody().replace("\"finalDestination\": \"Samarqand\"", "\"finalDestination\": \"toshkent\""))
+                .andExpect(status().isCreated());
+
+        String sent = channelPublisher.lastMessage();
+        assertThat(sent).contains("Tokio → Toshkent");
+        // "Tokio → Toshkent → toshkent" bo'lmasligi kerak
+        assertThat(sent).doesNotContain("Toshkent → toshkent");
+    }
+
+    @Test
+    @DisplayName("Yakuniy manzil boshqa tilda yozilsa ham takrorlanmaydi")
+    void doesNotRepeatFinalDestinationInAnotherLanguage() throws Exception {
+        // Foydalanuvchi rus tilida yozadi, kanalda o'zbekcha nom chiqadi.
+        submit(validCarryBody().replace("\"finalDestination\": \"Samarqand\"", "\"finalDestination\": \"Ташкент\""))
+                .andExpect(status().isCreated());
+
+        assertThat(channelPublisher.lastMessage()).doesNotContain("Ташкент");
+    }
+
+    @Test
+    @DisplayName("Boshqa yakuniy manzil ko'rsatiladi")
+    void showsDifferentFinalDestination() throws Exception {
+        submit(validCarryBody()).andExpect(status().isCreated());
+
+        assertThat(channelPublisher.lastMessage()).contains("→ Samarqand");
+    }
+
+    @Test
     @DisplayName("Izohdagi HTML kanalga xom ketmaydi (§7.2)")
     void escapesHtmlInComment() throws Exception {
         submit(validCarryBody().replace("Hujjat va kiyim olib ketaman",

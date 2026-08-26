@@ -83,10 +83,34 @@ public class ChannelPostFormatter {
             line.append("  (").append(TelegramHtml.escape(originCity))
                     .append(" → ").append(TelegramHtml.escape(destCity)).append(')');
         }
-        if (post.getFinalDestination() != null && !post.getFinalDestination().isBlank()) {
-            line.append(" → ").append(TelegramHtml.escape(post.getFinalDestination()));
+        // Yakuniy manzil kelish shahrining o'zi bo'lsa takrorlanmaydi:
+        // "Tokio → Toshkent → Toshkent" degan post uyatli ko'rinadi.
+        String finalDestination = post.getFinalDestination();
+        if (!isRedundantFinalDestination(finalDestination, post.getDestAirport(), post.getDestCityFree())) {
+            line.append(" → ").append(TelegramHtml.escape(finalDestination));
         }
         return line.toString();
+    }
+
+    /**
+     * Aeroportning uchala nomi bilan solishtiriladi: foydalanuvchi "Бухара"
+     * deb yozishi mumkin, kanalda esa o'zbekcha nom chiqadi.
+     */
+    private boolean isRedundantFinalDestination(String finalDestination, Airport destAirport,
+                                                String destCityFree) {
+        if (finalDestination == null || finalDestination.isBlank()) {
+            return true;
+        }
+        String target = finalDestination.strip();
+        List<String> candidates = new ArrayList<>(4);
+        if (destAirport != null) {
+            candidates.add(destAirport.getCityUz());
+            candidates.add(destAirport.getCityRu());
+            candidates.add(destAirport.getCityEn());
+        }
+        candidates.add(destCityFree);
+        return candidates.stream()
+                .anyMatch(name -> name != null && name.strip().equalsIgnoreCase(target));
     }
 
     private String code(Airport airport, String freeCity) {

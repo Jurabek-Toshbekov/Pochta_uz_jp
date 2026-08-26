@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { EV } from '../analytics/events';
 import { flush, track } from '../analytics/track';
-import { BoardingPassCard, type BoardingPassData } from '../components/BoardingPassCard';
+import { BoardingPassCard } from '../components/BoardingPassCard';
 import {
   CheckRow,
   ErrorState,
@@ -14,6 +14,8 @@ import { useCreatePost } from '../hooks/useCreatePost';
 import { useReference } from '../hooks/useReference';
 import { useBackButton, useMainButton, hapticSuccess } from '../hooks/useTelegram';
 import { useT } from '../i18n/useT';
+import { toBoardingPassData } from '../lib/boardingPass';
+import { useLanguage } from '../store/appStore';
 import {
   allChecksAccepted,
   toCreateRequest,
@@ -29,6 +31,7 @@ import { firstErrorStep, useFormErrorStore } from '../store/formErrorStore';
  */
 export function PreviewPage() {
   const t = useT();
+  const language = useLanguage();
   const navigate = useNavigate();
   const reference = useReference();
   const createPost = useCreatePost();
@@ -48,32 +51,36 @@ export function PreviewPage() {
     track(EV.SAFETY_CHECKLIST_VIEW);
   }, []);
 
-  const cardData = useMemo<BoardingPassData>(() => {
-    const airports = reference.data?.airports ?? [];
-    const categories = reference.data?.categories ?? [];
-    const origin = airports.find((airport) => airport.code === form.originAirport);
-    const dest = airports.find((airport) => airport.code === form.destAirport);
-
-    return {
-      postType: form.postType ?? 'CARRY',
-      originCode: form.originAirport,
-      destCode: form.destAirport,
-      originCityFree: form.originCityFree,
-      destCityFree: form.destCityFree,
-      originCity: origin?.cityUz ?? null,
-      destCity: dest?.cityUz ?? null,
-      finalDestination: form.finalDestination,
-      date: form.date || null,
-      flexibleDays: form.dateFlexible ? form.dateFlexibleDays : 0,
-      weightKg: form.weightKg ? Number(form.weightKg) : null,
-      weightKgMax: form.weightKgMax ? Number(form.weightKgMax) : null,
-      priceAmount: form.priceAmount ? Number(form.priceAmount) : null,
-      priceCurrency: form.priceCurrency,
-      priceUnit: form.priceUnit,
-      categories: categories.filter((category) => form.categoryIds.includes(category.id)),
-      comment: form.comment,
-    };
-  }, [form, reference.data]);
+  // Forma holati ham e'lon shakliga keltiriladi — karta bitta manbadan
+  // qurilishi uchun (lib/boardingPass.ts).
+  const cardData = useMemo(
+    () =>
+      toBoardingPassData(
+        {
+          postType: form.postType ?? 'CARRY',
+          direction: form.direction ?? 'JP_UZ',
+          originAirport: form.originAirport,
+          destAirport: form.destAirport,
+          originCityFree: form.originCityFree || null,
+          destCityFree: form.destCityFree || null,
+          finalDestination: form.finalDestination || null,
+          departDate: form.postType === 'CARRY' ? form.date || null : null,
+          deadlineDate: form.postType === 'CARRY' ? null : form.date || null,
+          dateFlexibleDays: form.dateFlexible ? form.dateFlexibleDays : 0,
+          weightKg: form.weightKg ? Number(form.weightKg) : null,
+          weightKgMax: form.weightKgMax ? Number(form.weightKgMax) : null,
+          priceAmount: form.priceAmount ? Number(form.priceAmount) : null,
+          priceCurrency: form.priceCurrency,
+          priceUnit: form.priceUnit,
+          categoryIds: form.categoryIds,
+          comment: form.comment || null,
+        },
+        reference.data?.airports,
+        reference.data?.categories,
+        language,
+      ),
+    [form, reference.data, language],
+  );
 
   const submit = useCallback(() => {
     if (!accepted || createPost.isPending) {

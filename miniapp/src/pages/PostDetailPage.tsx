@@ -15,7 +15,8 @@ import { useReference } from '../hooks/useReference';
 import { usePostDetail, useRevealContact } from '../hooks/useSearchPosts';
 import { openLink, shareUrl, useBackButton, useMainButton, hapticSuccess } from '../hooks/useTelegram';
 import { useT } from '../i18n/useT';
-import { toCardData } from './SearchPage';
+import { toBoardingPassData } from '../lib/boardingPass';
+import { useLanguage } from '../store/appStore';
 
 /**
  * E'lon tafsiloti (§9.1 {@code /post/:id}).
@@ -26,6 +27,7 @@ import { toCardData } from './SearchPage';
  */
 export function PostDetailPage() {
   const t = useT();
+  const language = useLanguage();
   const navigate = useNavigate();
   const { postId } = useParams();
   const reference = useReference();
@@ -94,7 +96,7 @@ export function PostDetailPage() {
   return (
     <div className="page">
       <BoardingPassCard
-        data={toCardData(post, reference.data?.airports, reference.data?.categories)}
+        data={toBoardingPassData(post, reference.data?.airports, reference.data?.categories, language)}
         status={post.verified ? t.detail.verified : undefined}
       />
 

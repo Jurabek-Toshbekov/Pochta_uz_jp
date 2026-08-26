@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { PostSummary } from '../api/types';
 import { EV } from '../analytics/events';
 import { track } from '../analytics/track';
-import { BoardingPassCard, type BoardingPassData } from '../components/BoardingPassCard';
+import { BoardingPassCard } from '../components/BoardingPassCard';
 import { SearchFilters } from '../components/SearchFilters';
 import {
   EmptyState,
@@ -18,6 +18,8 @@ import { useReference } from '../hooks/useReference';
 import { useCreateSubscription, useSearchPosts } from '../hooks/useSearchPosts';
 import { useBackButton, haptic } from '../hooks/useTelegram';
 import { useT } from '../i18n/useT';
+import { toBoardingPassData } from '../lib/boardingPass';
+import { useLanguage } from '../store/appStore';
 import {
   activeFilterCount,
   canSubscribe,
@@ -39,6 +41,7 @@ export function SearchPage() {
   const reference = useReference();
   const filters = useSearchStore();
   const resetFilters = useSearchStore((state) => state.reset);
+  const language = useLanguage();
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
@@ -158,7 +161,7 @@ export function SearchPage() {
               onClick={() => openPost(post, index + 1)}
             >
               <BoardingPassCard
-                data={toCardData(post, reference.data?.airports, reference.data?.categories)}
+                data={toBoardingPassData(post, reference.data?.airports, reference.data?.categories, language)}
                 status={post.verified ? '✅' : undefined}
               />
             </button>
@@ -180,42 +183,4 @@ export function SearchPage() {
       ) : null}
     </div>
   );
-}
-
-export function toCardData(
-  post: PostSummary,
-  airports: { code: string; cityUz: string }[] | undefined,
-  categories: { id: number; code: string; titleUz: string; emoji: string | null }[] | undefined,
-): BoardingPassData {
-  const list = airports ?? [];
-  return {
-    postType: post.postType,
-    originCode: post.originAirport,
-    destCode: post.destAirport,
-    originCityFree: post.originCityFree,
-    destCityFree: post.destCityFree,
-    originCity: list.find((airport) => airport.code === post.originAirport)?.cityUz ?? null,
-    destCity: list.find((airport) => airport.code === post.destAirport)?.cityUz ?? null,
-    finalDestination: post.finalDestination,
-    date: post.departDate ?? post.deadlineDate,
-    flexibleDays: post.dateFlexibleDays,
-    weightKg: post.weightKg,
-    weightKgMax: post.weightKgMax,
-    priceAmount: post.priceAmount,
-    priceCurrency: post.priceCurrency,
-    priceUnit: post.priceUnit,
-    categories: (categories ?? [])
-      .filter((category) => post.categoryIds.includes(category.id))
-      .map((category) => ({
-        id: category.id,
-        code: category.code,
-        titleUz: category.titleUz,
-        titleRu: category.titleUz,
-        emoji: category.emoji,
-        riskLevel: 'LOW' as const,
-        warningUz: null,
-        sortOrder: 0,
-      })),
-    comment: post.comment,
-  };
 }

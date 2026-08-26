@@ -5,11 +5,13 @@ import { api } from '../api/endpoints';
 import type { PostResponse } from '../api/types';
 import { EV } from '../analytics/events';
 import { track } from '../analytics/track';
-import { BoardingPassCard, type BoardingPassData } from '../components/BoardingPassCard';
+import { BoardingPassCard } from '../components/BoardingPassCard';
 import { GhostButton, Loader, PrimaryButton, uiStyles as styles } from '../components/primitives';
 import { useReference } from '../hooks/useReference';
 import { openLink, shareUrl, useBackButton, useMainButton } from '../hooks/useTelegram';
 import { useT } from '../i18n/useT';
+import { toBoardingPassData } from '../lib/boardingPass';
+import { useLanguage } from '../store/appStore';
 
 /**
  * Muvaffaqiyat ekrani (§9.2). Karta ustiga hanko muhri bosiladi — loyihaning
@@ -20,6 +22,7 @@ import { useT } from '../i18n/useT';
  */
 export function SuccessPage() {
   const t = useT();
+  const language = useLanguage();
   const navigate = useNavigate();
   const { postId = '' } = useParams();
   const location = useLocation();
@@ -55,30 +58,12 @@ export function SuccessPage() {
     );
   }
 
-  const categories = (reference.data?.categories ?? []).filter((category) =>
-    post.categoryIds.includes(category.id),
+  const data = toBoardingPassData(
+    post,
+    reference.data?.airports,
+    reference.data?.categories,
+    language,
   );
-  const airports = reference.data?.airports ?? [];
-
-  const data: BoardingPassData = {
-    postType: post.postType,
-    originCode: post.originAirport,
-    destCode: post.destAirport,
-    originCityFree: post.originCityFree,
-    destCityFree: post.destCityFree,
-    originCity: airports.find((a) => a.code === post.originAirport)?.cityUz ?? null,
-    destCity: airports.find((a) => a.code === post.destAirport)?.cityUz ?? null,
-    finalDestination: post.finalDestination,
-    date: post.departDate ?? post.deadlineDate,
-    flexibleDays: post.dateFlexibleDays,
-    weightKg: post.weightKg,
-    weightKgMax: post.weightKgMax,
-    priceAmount: post.priceAmount,
-    priceCurrency: post.priceCurrency,
-    priceUnit: post.priceUnit,
-    categories,
-    comment: post.comment,
-  };
 
   return (
     <div className="page">

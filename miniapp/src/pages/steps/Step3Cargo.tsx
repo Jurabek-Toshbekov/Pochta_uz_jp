@@ -9,7 +9,8 @@ import {
   SegmentedControl,
   uiStyles as styles,
 } from '../../components/primitives';
-import { highRiskWarnings } from '../../hooks/useReference';
+import { categoryTitle, highRiskWarnings } from '../../hooks/useReference';
+import { useLanguage } from '../../store/appStore';
 import { STEP } from '../../analytics/events';
 
 const COMMENT_MAX = 1000;
@@ -27,6 +28,7 @@ interface Props {
  */
 export function Step3Cargo({ categories, fieldErrors }: Props) {
   const t = useT();
+  const language = useLanguage();
   const state = usePostFormStore();
   const { patch, toggleCategory } = state;
 
@@ -42,7 +44,7 @@ export function Step3Cargo({ categories, fieldErrors }: Props) {
           {categories.map((category) => (
             <Chip
               key={category.id}
-              label={`${category.emoji ?? ''} ${category.titleUz}`.trim()}
+              label={`${category.emoji ?? ''} ${categoryTitle(category, language)}`.trim()}
               active={state.categoryIds.includes(category.id)}
               onToggle={() => toggleCategory(category.id)}
             />
@@ -51,7 +53,7 @@ export function Step3Cargo({ categories, fieldErrors }: Props) {
       </Field>
 
       {warnings.map((category) => (
-        <Notice key={category.id} title={`${t.step3.riskWarning}: ${category.titleUz}`}>
+        <Notice key={category.id} title={`${t.step3.riskWarning}: ${categoryTitle(category, language)}`}>
           {category.warningUz}
         </Notice>
       ))}

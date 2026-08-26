@@ -1,15 +1,18 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BoardingPassCard, type BoardingPassData } from '../components/BoardingPassCard';
+import { BoardingPassCard } from '../components/BoardingPassCard';
 import { EmptyState, ErrorState, Loader, uiStyles as styles } from '../components/primitives';
 import { useMyPosts } from '../hooks/useMyPosts';
 import { useReference } from '../hooks/useReference';
 import { useBackButton } from '../hooks/useTelegram';
 import { useT } from '../i18n/useT';
+import { toBoardingPassData } from '../lib/boardingPass';
+import { useLanguage } from '../store/appStore';
 
 /** "Mening e'lonlarim" (§9.1). Bo'sh ekran — taklif, quruq xabar emas (§9.4). */
 export function MyPostsPage() {
   const t = useT();
+  const language = useLanguage();
   const navigate = useNavigate();
   const posts = useMyPosts();
   const reference = useReference();
@@ -49,43 +52,23 @@ export function MyPostsPage() {
           onAction={() => navigate('/new', { state: { entryPoint: 'my_posts' } })}
         />
       ) : (
-        list.map((post) => {
-          const airports = reference.data?.airports ?? [];
-          const data: BoardingPassData = {
-            postType: post.postType,
-            originCode: post.originAirport,
-            destCode: post.destAirport,
-            originCityFree: post.originCityFree,
-            destCityFree: post.destCityFree,
-            originCity: airports.find((a) => a.code === post.originAirport)?.cityUz ?? null,
-            destCity: airports.find((a) => a.code === post.destAirport)?.cityUz ?? null,
-            finalDestination: post.finalDestination,
-            date: post.departDate ?? post.deadlineDate,
-            flexibleDays: post.dateFlexibleDays,
-            weightKg: post.weightKg,
-            weightKgMax: post.weightKgMax,
-            priceAmount: post.priceAmount,
-            priceCurrency: post.priceCurrency,
-            priceUnit: post.priceUnit,
-            categories: (reference.data?.categories ?? []).filter((category) =>
-              post.categoryIds.includes(category.id),
-            ),
-            comment: post.comment,
-          };
-
-          return (
-            <BoardingPassCard
-              key={post.id}
-              data={data}
-              status={t.status[post.status]}
-              footer={
-                <p className={styles.hint}>
-                  {post.viewCount} {t.my.views} · {post.contactRevealCount} {t.my.reveals}
-                </p>
-              }
-            />
-          );
-        })
+        list.map((post) => (
+          <BoardingPassCard
+            key={post.id}
+            data={toBoardingPassData(
+              post,
+              reference.data?.airports,
+              reference.data?.categories,
+              language,
+            )}
+            status={t.status[post.status]}
+            footer={
+              <p className={styles.hint}>
+                {post.viewCount} {t.my.views} · {post.contactRevealCount} {t.my.reveals}
+              </p>
+            }
+          />
+        ))
       )}
     </div>
   );

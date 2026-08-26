@@ -2,6 +2,8 @@ import type { Airport, CargoCategory, Currency, Direction, PostType } from '../a
 import { EV } from '../analytics/events';
 import { track } from '../analytics/track';
 import { useT } from '../i18n/useT';
+import { categoryTitle } from '../hooks/useReference';
+import { useLanguage } from '../store/appStore';
 import { useSearchStore } from '../store/searchStore';
 import { Chip, ChipGroup, Field, SegmentedControl, uiStyles as styles } from './primitives';
 
@@ -16,6 +18,7 @@ interface Props {
  */
 export function SearchFilters({ airports, categories }: Props) {
   const t = useT();
+  const language = useLanguage();
   const filters = useSearchStore();
   const { patch, toggleIn, toggleCategory } = filters;
 
@@ -136,7 +139,7 @@ export function SearchFilters({ airports, categories }: Props) {
           {categories.map((category) => (
             <Chip
               key={category.id}
-              label={`${category.emoji ?? ''} ${category.titleUz}`.trim()}
+              label={`${category.emoji ?? ''} ${categoryTitle(category, language)}`.trim()}
               active={filters.categories.includes(category.id)}
               onToggle={() => {
                 toggleCategory(category.id);

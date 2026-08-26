@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { CargoCategory, Currency, PostType, PriceUnit } from '../api/types';
+import { categoryTitle } from '../hooks/useReference';
 import { useT } from '../i18n/useT';
+import { useLanguage } from '../store/appStore';
 import styles from './BoardingPassCard.module.css';
 
 export interface BoardingPassData {
@@ -39,6 +41,7 @@ interface Props {
  */
 export function BoardingPassCard({ data, status, stamped = false, footer }: Props) {
   const t = useT();
+  const language = useLanguage();
 
   const dateText = formatDate(data.date);
   const flexText = data.flexibleDays > 0 ? ` ±${data.flexibleDays}` : '';
@@ -63,7 +66,11 @@ export function BoardingPassCard({ data, status, stamped = false, footer }: Prop
       {data.originCity && data.destCity ? (
         <p className={styles.cities}>
           {data.originCity} → {data.destCity}
-          {data.finalDestination ? ` → ${data.finalDestination}` : ''}
+          {/* Yakuniy manzil kelish shahri bilan bir xil bo'lsa takrorlanmaydi:
+              odam ko'pincha "TAS" tanlab, yakuniy manzilga ham "Toshkent" yozadi. */}
+          {data.finalDestination && !sameCity(data.finalDestination, data.destCity)
+            ? ` → ${data.finalDestination}`
+            : ''}
         </p>
       ) : null}
 
@@ -101,7 +108,7 @@ export function BoardingPassCard({ data, status, stamped = false, footer }: Prop
         {data.categories.map((category) => (
           <span key={category.id} className={styles.tag}>
             {category.emoji ? `${category.emoji} ` : ''}
-            {category.titleUz}
+            {categoryTitle(category, language)}
           </span>
         ))}
       </div>
@@ -119,6 +126,11 @@ export function BoardingPassCard({ data, status, stamped = false, footer }: Prop
       ) : null}
     </article>
   );
+}
+
+/** "Toshkent" va "toshkent " ni bir xil deb hisoblaydi. */
+function sameCity(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
 
 function Endpoint({ code, free }: { code: string | null; free?: string | null }) {

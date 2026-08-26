@@ -38,11 +38,27 @@ export class NetworkError extends Error {
 }
 
 /**
+ * Lokal ishlab chiqish uchun tayyor `initData`.
+ *
+ * Telegram tashqarisida `WebApp.initData` bo'sh bo'ladi va API 401 qaytaradi.
+ * Brauzerda UI'ni sinash uchun `.env.local`ga `VITE_DEV_INIT_DATA` qo'yiladi
+ * (`scripts/dev-initdata.py` yasab beradi).
+ *
+ * Bu tekshiruvni CHETLAB O'TMAYDI: satr backendda xuddi shu HMAC imzosi
+ * bilan tekshiriladi (§7.1). Faqat uni Telegramsiz yetkazib berish usuli.
+ * `import.meta.env.DEV` false bo'lganda Vite bu kodni butunlay olib tashlaydi,
+ * ya'ni prod bundle'da mavjud emas.
+ */
+const DEV_INIT_DATA: string = import.meta.env.DEV
+  ? (import.meta.env.VITE_DEV_INIT_DATA ?? '')
+  : '';
+
+/**
  * Har bir so'rovga `Authorization: tma <initData>` qo'shiladi (§7.1).
  * Boshqa autentifikatsiya usuli yo'q — user_id hech qachon body'da yuborilmaydi.
  */
 function authHeader(): Record<string, string> {
-  const initData = WebApp.initData;
+  const initData = WebApp.initData || DEV_INIT_DATA;
   return initData ? { Authorization: `tma ${initData}` } : {};
 }
 

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/endpoints';
-import type { Airport, CargoCategory, Direction } from '../api/types';
+import type { Airport, CargoCategory, Direction, LanguageCode } from '../api/types';
 
 /** Reference ma'lumot — server 1 soat keshlaydi, klient ham (§12). */
 export function useReference() {
@@ -27,6 +27,17 @@ export function airportsFor(
   return airports
     .filter((airport) => airport.countryCode === country)
     .sort((a, b) => Number(b.popular) - Number(a.popular) || a.sortOrder - b.sortOrder);
+}
+
+/**
+ * Kategoriya nomi joriy tilda.
+ *
+ * Reference ma'lumotda faqat `titleUz` va `titleRu` bor — kirill yozuvidagi
+ * o'zbekcha uchun alohida ustun yo'q, shuning uchun u lotin variantiga
+ * qaytadi. Aks holda rus tilidagi ekranda o'zbekcha nomlar chiqib qolardi.
+ */
+export function categoryTitle(category: CargoCategory, language: LanguageCode): string {
+  return language === 'ru' ? category.titleRu : category.titleUz;
 }
 
 export function categoryById(
