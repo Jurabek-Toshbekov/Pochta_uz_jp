@@ -10,11 +10,13 @@ import uz.pochtajp.domain.enums.UserRole;
  * Ikkisi ham faqat tekshirilgan {@code initData}dan keladi (§7.1).
  *
  * @param startParam deep link atributsiyasi uchun ({@code startapp=})
+ * @param newUser    shu so'rovda birinchi marta ro'yxatga olindi
  */
 public record MiniAppPrincipal(
         UUID userId,
         long telegramId,
         UserRole role,
-        String startParam
+        String startParam,
+        boolean newUser
 ) {
 }

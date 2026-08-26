@@ -15,7 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import uz.pochtajp.common.ApiErrorResponse;
 import uz.pochtajp.common.exception.ApiException;
 import uz.pochtajp.common.exception.InitDataInvalidException;
-import uz.pochtajp.domain.User;
 import uz.pochtajp.service.UserService;
 
 /**
@@ -62,10 +61,11 @@ public class TelegramInitDataAuthFilter extends OncePerRequestFilter {
                 throw new InitDataInvalidException("Authorization: tma <initData> headeri yo'q");
             }
             TelegramInitData initData = validator.validate(header.substring(SCHEME.length()).trim());
-            User user = userService.upsertFromInitData(initData);
+            UserService.Session session = userService.upsertFromInitData(initData);
 
             MiniAppPrincipal principal = new MiniAppPrincipal(
-                    user.getId(), user.getTelegramId(), user.getRole(), initData.startParam());
+                    session.user().getId(), session.user().getTelegramId(), session.user().getRole(),
+                    initData.startParam(), session.created());
             SecurityContextHolder.getContext().setAuthentication(new MiniAppAuthentication(principal));
         } catch (ApiException ex) {
             SecurityContextHolder.clearContext();

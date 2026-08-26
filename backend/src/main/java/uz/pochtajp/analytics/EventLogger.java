@@ -52,14 +52,29 @@ public class EventLogger {
 
     /** Bitta event. Chaqiruvchi natijani kutmaydi. */
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void track(TrackedEvent event) {
-        trackAll(List.of(event));
+        persist(List.of(event));
     }
 
     /** Batch (§6.2 — Mini App 10 event yoki 5 soniyada bir yuboradi). */
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void trackAll(Collection<TrackedEvent> events) {
+        persist(events);
+    }
+
+    /**
+     * REQUIRES_NEW ataylab: event chaqiruvchi tranzaksiya bilan birga rollback
+     * BO'LMASLIGI kerak. Masalan chegara oshganda {@code rate_limit_hit} yoziladi
+     * va shundan keyin 429 tashlanadi — event yo'qolsa, chegaraga urilgan
+     * foydalanuvchilarni sanab bo'lmaydi (§1.6).
+     *
+     * <p>Bu metod {@code private}: {@link #track} va {@link #trackAll} bir-birini
+     * chaqirmaydi, aks holda Spring proksisi chetlab o'tilib REQUIRES_NEW
+     * ishlamay qolardi.
+     */
+    private void persist(Collection<TrackedEvent> events) {
         if (events == null || events.isEmpty()) {
             return;
         }

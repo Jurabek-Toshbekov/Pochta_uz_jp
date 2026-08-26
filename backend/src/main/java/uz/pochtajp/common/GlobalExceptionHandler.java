@@ -19,6 +19,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import uz.pochtajp.common.exception.ApiException;
 import uz.pochtajp.common.exception.RateLimitException;
+import uz.pochtajp.common.exception.ValidationException;
 
 /**
  * Yagona xato ishlovchi. Ikki qoida:
@@ -33,6 +34,15 @@ import uz.pochtajp.common.exception.RateLimitException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /** Biznes qoidasi buzilgan — maydon nomlari bilan qaytadi. */
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusinessValidation(ValidationException ex,
+                                                                     HttpServletRequest request) {
+        log.warn("Biznes validatsiyasi: path={} fields={}", request.getRequestURI(), ex.getFieldErrors().keySet());
+        return ResponseEntity.badRequest()
+                .body(ApiErrorResponse.validation(ex.getMessage(), ex.getFieldErrors()));
+    }
 
     /** Biznes xatolari — status va matn o'zida keladi. */
     @ExceptionHandler(ApiException.class)

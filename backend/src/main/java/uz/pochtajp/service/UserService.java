@@ -17,6 +17,7 @@ import uz.pochtajp.domain.enums.UserRole;
 import uz.pochtajp.domain.enums.UserStatus;
 import uz.pochtajp.repository.UserRepository;
 import uz.pochtajp.security.TelegramInitData;
+import uz.pochtajp.api.miniapp.dto.SessionRequest;
 import uz.pochtajp.security.TelegramWebAppUser;
 
 /**
@@ -53,14 +54,20 @@ public class UserService {
     /**
      * Telegram foydalanuvchisini topadi yoki yaratadi va profil ma'lumotini yangilaydi.
      * BLOCKED foydalanuvchi ishlashga qo'yilmaydi.
+     *
+     * @return foydalanuvchi va u shu so'rovda yaratilgani ({@code is_first_open} eventi uchun)
      */
     @Transactional
-    public User upsertFromInitData(TelegramInitData initData) {
+    public Session upsertFromInitData(TelegramInitData initData) {
         TelegramWebAppUser tgUser = initData.user();
         long telegramId = tgUser.id();
 
+        boolean[] created = {false};
         User user = userRepository.findByTelegramId(telegramId)
-                .orElseGet(() -> createUser(telegramId, initData));
+                .orElseGet(() -> {
+                    created[0] = true;
+                    return createUser(telegramId, initData);
+                });
 
         if (user.getStatus() == UserStatus.BLOCKED) {
             log.warn("Bloklangan foydalanuvchi so'rov yubordi: user_id={}", user.getId());
@@ -80,7 +87,43 @@ public class UserService {
             user.setRole(UserRole.ADMIN);
             log.info("Foydalanuvchiga ADMIN roli berildi: user_id={}", user.getId());
         }
+        return new Session(userRepository.save(user), created[0]);
+    }
+
+    /** Upsert natijasi. */
+    public record Session(User user, boolean created) {
+    }
+
+    /**
+     * Sessiya boshida keladigan tanlovlar: til va ToS/Privacy roziligi (§7.2).
+     *
+     * <p>Rozilik vaqti bir marta yoziladi va keyin o'zgartirilmaydi — bu huquqiy
+     * dalil, shuning uchun qayta yozish mumkin emas.
+     */
+    @Transactional
+    public User applySessionPreferences(UUID userId, SessionRequest request) {
+        User user = getActiveForUpdate(userId);
+        Instant now = Instant.now();
+
+        if (request.uiLanguage() != null && !request.uiLanguage().equals(user.getUiLanguage())) {
+            user.setUiLanguage(request.uiLanguage());
+        }
+        if (Boolean.TRUE.equals(request.acceptTos()) && user.getConsentTosAt() == null) {
+            user.setConsentTosAt(now);
+        }
+        if (Boolean.TRUE.equals(request.acceptPrivacy()) && user.getConsentPrivacyAt() == null) {
+            user.setConsentPrivacyAt(now);
+        }
         return userRepository.save(user);
+    }
+
+    private User getActiveForUpdate(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi."));
+        if (user.getDeletedAt() != null) {
+            throw new NotFoundException("Foydalanuvchi topilmadi.");
+        }
+        return user;
     }
 
     @Transactional(readOnly = true)

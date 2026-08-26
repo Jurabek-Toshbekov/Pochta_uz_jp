@@ -29,7 +29,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(AbstractIntegrationTest.SyncAsyncConfig.class)
+@Import({AbstractIntegrationTest.SyncAsyncConfig.class, StubChannelPublisher.Config.class})
 public abstract class AbstractIntegrationTest {
 
     /** Testdagi soxta bot tokeni. Real token hech qachon testda ishlatilmaydi (§1.2). */
@@ -51,6 +51,9 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    protected StubChannelPublisher channelPublisher;
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
@@ -61,6 +64,9 @@ public abstract class AbstractIntegrationTest {
         registry.add("bot.init-data-max-age-seconds", () -> 86_400);
         registry.add("app.rate-limit-requests-per-minute", () -> 60);
         registry.add("app.admin-telegram-ids", () -> "");
+        registry.add("bot.channel-chat-id", () -> "-1001111111111");
+        registry.add("bot.channel-username", () -> "jpuzbpochta_test");
+        registry.add("bot.miniapp-url", () -> "https://app.example.test");
     }
 
     /**
@@ -71,7 +77,8 @@ public abstract class AbstractIntegrationTest {
      * bu metod faqat {@code src/test} ichida turadi.
      */
     @BeforeEach
-    void resetDatabase() {
+    void resetState() {
+        channelPublisher.reset();
         jdbcTemplate.execute("""
                 TRUNCATE TABLE events, search_queries, contact_reveals, notifications_sent,
                     notification_subscriptions, moderation_actions, reports, reviews,

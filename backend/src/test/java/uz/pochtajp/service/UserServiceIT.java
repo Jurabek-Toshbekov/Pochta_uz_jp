@@ -43,7 +43,7 @@ class UserServiceIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("Birinchi kirish — foydalanuvchi yaratiladi, audit maydonlari to'ladi")
     void createsUserOnFirstSession() {
-        User user = userService.upsertFromInitData(initData(null));
+        User user = userService.upsertFromInitData(initData(null)).user();
 
         assertThat(user.getId()).isNotNull();
         assertThat(user.getTelegramId()).isEqualTo(TELEGRAM_ID);
@@ -60,12 +60,12 @@ class UserServiceIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("Takroriy kirish — yangi yozuv yaratilmaydi, last_seen yangilanadi")
     void reusesExistingUser() {
-        User first = userService.upsertFromInitData(initData(null));
+        User first = userService.upsertFromInitData(initData(null)).user();
         // Postgres TIMESTAMPTZ mikrosekundda saqlaydi, Instant esa nanosekundda —
         // shuning uchun taqqoslashdan oldin kesib olinadi.
         Instant firstSeen = first.getFirstSeenAt().truncatedTo(ChronoUnit.MILLIS);
 
-        User second = userService.upsertFromInitData(initData(null));
+        User second = userService.upsertFromInitData(initData(null)).user();
 
         assertThat(second.getId()).isEqualTo(first.getId());
         assertThat(second.getFirstSeenAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(firstSeen);
@@ -76,18 +76,18 @@ class UserServiceIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("start_param referral_source ga yoziladi (§6.4, 6-band)")
     void storesReferralSourceOnce() {
-        User user = userService.upsertFromInitData(initData("ch_deep_link_1"));
+        User user = userService.upsertFromInitData(initData("ch_deep_link_1")).user();
         assertThat(user.getReferralSource()).isEqualTo("ch_deep_link_1");
 
         // Birinchi manba o'zgarmaydi — atributsiya buzilmasligi kerak.
-        User again = userService.upsertFromInitData(initData("ch_deep_link_2"));
+        User again = userService.upsertFromInitData(initData("ch_deep_link_2")).user();
         assertThat(again.getReferralSource()).isEqualTo("ch_deep_link_1");
     }
 
     @Test
     @DisplayName("BLOCKED foydalanuvchi — 403")
     void rejectsBlockedUser() {
-        User user = userService.upsertFromInitData(initData(null));
+        User user = userService.upsertFromInitData(initData(null)).user();
         user.setStatus(UserStatus.BLOCKED);
         user.setBlockedReason("Test");
         userRepository.saveAndFlush(user);
