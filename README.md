@@ -70,9 +70,34 @@ npm install
 npm run dev                   # http://localhost:5173
 ```
 
+Backend `localhost:8080` da bo'lsa, alohida sozlash kerak emas: `VITE_API_BASE_URL`
+bo'sh qoldiriladi va Vite dev proxy `/api`, `/health`, `/webhook` so'rovlarini
+backendga uzatadi. So'rov same-origin bo'lgani uchun CORS ham kerak emas.
+
 Telegram tashqarisida brauzerda ochilsa `initData` bo'lmaydi va API 401 qaytaradi —
-bu kutilgan holat (§7.1). To'liq sinash uchun @BotFather'da Mini App URL'ini sozlab,
-botdan oching (dev'da `ngrok` yoki `cloudflared` bilan tunnel).
+bu kutilgan holat (§7.1). UI'ni brauzerda ko'rish uchun `VITE_DEV_INIT_DATA`
+(pastda), Telegramda ko'rish uchun tunnel kerak.
+
+### Tunnel orqali Telegramda sinash
+
+Telegram Mini App URL'i HTTPS bo'lishi shart, shuning uchun tunnel kerak.
+Vite tashqi xostni bloklaydi (DNS rebinding himoyasi) — keng tarqalgan tunnel
+domenlari `vite.config.ts` dagi `server.allowedHosts` da ruxsat etilgan.
+
+**Faqat bitta tunnel kerak** — dev proxy backendni ham shu domen ostiga olib
+chiqadi:
+
+```bash
+cloudflared tunnel --url http://localhost:5173     # yoki: ngrok http 5173
+```
+
+Keyin @BotFather → bot → *Bot Settings* → *Menu Button* / *Mini App* →
+tunnel URL'ini qo'yish.
+
+**ngrok bepul rejasida** brauzerga bir marta "You are about to visit…"
+ogohlantirish sahifasi chiqadi (`ERR_NGROK_6024`) va Telegram webview'ida ham
+ko'rinadi. "Visit Site" bosilgandan keyin ilova normal ishlaydi (cookie
+qo'yiladi). `cloudflared` da bunday sahifa yo'q.
 
 ```bash
 npm run lint                  # tsc --noEmit
