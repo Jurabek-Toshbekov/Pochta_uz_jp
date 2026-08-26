@@ -135,5 +135,8 @@ hisoblari shu jadvaldan o'qiladi.
 | Voronka event'lari (klient) | ✅ `miniapp/src/analytics/` — batch 10/5s, PII manbada ham yuborilmaydi |
 | `post_submit` / `post_publish_*` (server) | ✅ `PostService`, `PublishService` |
 | `bot_command`, `deep_link_open`, `language_changed` (bot) | ✅ `bot/BotUpdateHandler.java` |
-| Qidiruv event'lari | ⏳ 3-bosqich |
+| Qidiruv event'lari (`search_performed`, `search_zero_result`, `search_saved`) | ✅ `PostSearchService`, `SubscriptionService` |
+| `search_open`, `search_filter_change`, `search_result_click` (klient) | ✅ `miniapp/src/pages/SearchPage.tsx`, `components/SearchFilters.tsx` |
+| `contact_reveal` (bitim boshlangan payt) | ✅ `PostDetailService` |
+| `post_detail_view`, `contact_click`, `post_share` | ✅ `miniapp/src/pages/PostDetailPage.tsx` |
 | `daily_metrics` agregati | ⏳ 4-bosqich |

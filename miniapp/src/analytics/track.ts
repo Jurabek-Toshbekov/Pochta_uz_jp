@@ -1,7 +1,9 @@
-import WebApp from '@twa-dev/sdk';
 import { beacon } from '../api/client';
 import { EVENTS_PATH, api } from '../api/endpoints';
 import type { TrackEventPayload } from '../api/types';
+import { getPlatform, getSessionId } from '../session';
+
+export { getPlatform, getSessionId };
 
 /**
  * Event yuborish (CLAUDE.md §6.2).
@@ -15,38 +17,9 @@ import type { TrackEventPayload } from '../api/types';
 
 const BATCH_SIZE = 10;
 const FLUSH_INTERVAL_MS = 5000;
-const SESSION_KEY = 'pochta.sessionId';
 
 let queue: TrackEventPayload[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
-
-function readSessionId(): string {
-  try {
-    const existing = sessionStorage.getItem(SESSION_KEY);
-    if (existing) {
-      return existing;
-    }
-    const created = crypto.randomUUID();
-    sessionStorage.setItem(SESSION_KEY, created);
-    return created;
-  } catch {
-    // Private rejim yoki storage o'chirilgan — sessiya faqat shu sahifa uchun.
-    return crypto.randomUUID();
-  }
-}
-
-let sessionId: string | null = null;
-
-export function getSessionId(): string {
-  if (!sessionId) {
-    sessionId = readSessionId();
-  }
-  return sessionId;
-}
-
-export function getPlatform(): string {
-  return WebApp.platform || 'unknown';
-}
 
 export function track(name: string, properties?: Record<string, unknown>, postId?: string): void {
   queue.push({

@@ -288,3 +288,15 @@
     opacity: 1;
   }
 }
+
+/* Qidiruv natijasi — butun karta bosiladi, lekin tugma ko'rinishi
+   qo'shilmaydi: karta o'zi bosiladigan element bo'lib qoladi. */
+.resultButton {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+}

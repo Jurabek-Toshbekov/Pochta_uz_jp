@@ -168,3 +168,103 @@ export interface TrackEventPayload {
   properties?: Record<string, unknown>;
   occurredAt?: string;
 }
+
+// ---------------------------------------------------------------------
+// Qidiruv (§10)
+// ---------------------------------------------------------------------
+
+export type PostSort = 'NEWEST' | 'DEPART_DATE' | 'CHEAPEST' | 'RATING';
+
+export interface PostSearchParams {
+  type?: PostType | null;
+  direction?: Direction | null;
+  origin?: string[];
+  dest?: string[];
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  categories?: number[];
+  priceMax?: number | null;
+  currency?: Currency | null;
+  verifiedOnly?: boolean;
+  q?: string | null;
+  sort?: PostSort;
+  cursor?: string | null;
+  size?: number;
+}
+
+/** Kontakt maydonlari YO'Q — u alohida so'rov bilan ochiladi (§6.4, 2-band). */
+export interface PostSummary {
+  id: string;
+  postType: PostType;
+  direction: Direction;
+  originAirport: string | null;
+  destAirport: string | null;
+  originCityFree: string | null;
+  destCityFree: string | null;
+  finalDestination: string | null;
+  departDate: string | null;
+  deadlineDate: string | null;
+  dateFlexibleDays: number;
+  weightKg: number | null;
+  weightKgMax: number | null;
+  priceAmount: number | null;
+  priceCurrency: Currency | null;
+  priceUnit: PriceUnit;
+  categoryIds: number[];
+  comment: string | null;
+  verified: boolean;
+  verificationLevel: VerificationLevel;
+  trustScore: number;
+  viewCount: number;
+  contactRevealCount: number;
+  publishedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface PostSearchResult {
+  items: PostSummary[];
+  /** Yo'q bo'lsa oxirgi sahifa (Jackson null maydonni javobga qo'shmaydi). */
+  nextCursor?: string;
+  /** Faqat birinchi sahifada keladi. */
+  totalCount?: number;
+  latencyMs: number;
+}
+
+export interface PostDetail {
+  post: PostSummary;
+  own: boolean;
+  contactRevealed: boolean;
+  deepLink?: string;
+  channelUrl?: string;
+}
+
+export interface Contact {
+  telegram?: string;
+  phone?: string;
+  other?: string;
+  alreadyRevealed: boolean;
+}
+
+export interface SubscriptionInput {
+  postType?: PostType | null;
+  direction?: Direction | null;
+  originAirport?: string | null;
+  destAirport?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  categoryIds?: number[];
+  sessionId?: string;
+  platform?: string;
+}
+
+export interface Subscription {
+  id: string;
+  postType: PostType | null;
+  direction: Direction | null;
+  originAirport: string | null;
+  destAirport: string | null;
+  dateFrom: string | null;
+  dateTo: string | null;
+  categoryIds: number[];
+  createdAt: string;
+}

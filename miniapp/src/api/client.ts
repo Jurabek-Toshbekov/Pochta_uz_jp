@@ -1,4 +1,5 @@
 import WebApp from '@twa-dev/sdk';
+import { getPlatform, getSessionId } from '../session';
 import type { ApiErrorBody } from './types';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
@@ -45,6 +46,14 @@ function authHeader(): Record<string, string> {
   return initData ? { Authorization: `tma ${initData}` } : {};
 }
 
+/**
+ * Sessiya konteksti header'da ketadi, query'da emas: aks holda u kesh
+ * kalitiga tushib qolardi va `search_queries` tahlilini chalkashtirardi.
+ */
+function contextHeaders(): Record<string, string> {
+  return { 'X-Session-Id': getSessionId(), 'X-Platform': getPlatform() };
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
@@ -61,6 +70,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal,
       headers: {
         ...authHeader(),
+        ...contextHeaders(),
         ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -102,7 +112,7 @@ export function beacon(path: string, payload: unknown): boolean {
     void fetch(`${BASE_URL}${path}`, {
       method: 'POST',
       keepalive: true,
-      headers: { ...authHeader(), 'Content-Type': 'application/json' },
+      headers: { ...authHeader(), ...contextHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     return true;

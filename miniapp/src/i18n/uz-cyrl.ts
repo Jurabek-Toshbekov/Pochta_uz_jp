@@ -22,7 +22,6 @@ export const uzCyrl: Dictionary = {
     newPost: 'Эълон бериш',
     search: 'Қидириш',
     myPosts: 'Менинг эълонларим',
-    searchSoon: 'Қидирув тез орада ишга тушади.',
   },
 
   consent: {
@@ -146,6 +145,54 @@ export const uzCyrl: Dictionary = {
   postType: {
     SEND: 'Почта юбораман',
     CARRY: 'Почта олиб кетаман',
+  },
+
+  search: {
+    title: 'Қидириш',
+    placeholder: 'Изоҳ ёки шаҳар бўйича',
+    filters: 'Фильтрлар',
+    apply: 'Кўрсатиш',
+    reset: 'Тозалаш',
+    results: 'натижа',
+    noResults: 'Бу шартларга мос эълон ҳозир йўқ.',
+    noResultsHint: 'Фильтрларни бўшатиб кўринг ёки чиқиши билан хабар берайлик.',
+    subscribeCta: '🔔 Чиқса хабар беринг',
+    subscribed: '✅ Обуна қўшилди. Эълон чиқиши билан хабар берамиз.',
+    saveSearch: '🔔 Бу қидирувни сақлаш',
+    loadMore: 'Яна кўрсатиш',
+    sort: 'Саралаш',
+    sortNewest: 'Энг янги',
+    sortDate: 'Сана бўйича',
+    sortCheapest: 'Арзон',
+    sortRating: 'Рейтинг',
+    anyType: 'Ҳаммаси',
+    anyDirection: 'Икки томон',
+    priceMax: 'Максимал нарх',
+    verifiedOnly: 'Фақат тасдиқланган',
+    cheapestNote: 'Валюталар аралаш бўлса тартиб тахминий.',
+  },
+
+  detail: {
+    contact: 'Алоқа',
+    reveal: 'Боғланиш',
+    revealHint: 'Контакт фақат сиз учун очилади.',
+    openTelegram: 'Телеграмда ёзиш',
+    call: 'Қўнғироқ қилиш',
+    openChannel: 'Каналдаги эълон',
+    share: 'Улашиш',
+    report: '⚠️ Шикоят қилиш',
+    reportSoon: 'Шикоят оқими тез орада ишга тушади.',
+    views: 'кўрилди',
+    reveals: 'боғланиш',
+    ownPost: 'Бу сизнинг эълонингиз.',
+    verified: '✅ Тасдиқланган фойдаланувчи',
+  },
+
+  subs: {
+    title: 'Хабарнома обуналари',
+    empty: 'Обуна йўқ. Қидирувни сақласангиз, мос эълон чиққанда хабар берамиз.',
+    delete: 'Ўчириш',
+    any: 'ҳаммаси',
   },
 
   language: {

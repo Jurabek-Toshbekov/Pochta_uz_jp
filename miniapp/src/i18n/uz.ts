@@ -25,7 +25,6 @@ export const uz = {
     newPost: 'E‘lon berish',
     search: 'Qidirish',
     myPosts: 'Mening e‘lonlarim',
-    searchSoon: 'Qidiruv tez orada ishga tushadi.',
   },
 
   consent: {
@@ -149,6 +148,54 @@ export const uz = {
   postType: {
     SEND: 'Pochta yuboraman',
     CARRY: 'Pochta olib ketaman',
+  },
+
+  search: {
+    title: 'Qidirish',
+    placeholder: 'Izoh yoki shahar bo‘yicha',
+    filters: 'Filtrlar',
+    apply: 'Ko‘rsatish',
+    reset: 'Tozalash',
+    results: 'natija',
+    noResults: 'Bu shartlarga mos e‘lon hozir yo‘q.',
+    noResultsHint: 'Filtrlarni bo‘shatib ko‘ring yoki chiqishi bilan xabar beraylik.',
+    subscribeCta: '🔔 Chiqsa xabar bering',
+    subscribed: '✅ Obuna qo‘shildi. E‘lon chiqishi bilan xabar beramiz.',
+    saveSearch: '🔔 Bu qidiruvni saqlash',
+    loadMore: 'Yana ko‘rsatish',
+    sort: 'Saralash',
+    sortNewest: 'Eng yangi',
+    sortDate: 'Sana bo‘yicha',
+    sortCheapest: 'Arzon',
+    sortRating: 'Reyting',
+    anyType: 'Hammasi',
+    anyDirection: 'Ikki tomon',
+    priceMax: 'Maksimal narx',
+    verifiedOnly: 'Faqat tasdiqlangan',
+    cheapestNote: 'Valyutalar aralash bo‘lsa tartib taxminiy.',
+  },
+
+  detail: {
+    contact: 'Aloqa',
+    reveal: 'Bog‘lanish',
+    revealHint: 'Kontakt faqat siz uchun ochiladi.',
+    openTelegram: 'Telegramda yozish',
+    call: 'Qo‘ng‘iroq qilish',
+    openChannel: 'Kanaldagi e‘lon',
+    share: 'Ulashish',
+    report: '⚠️ Shikoyat qilish',
+    reportSoon: 'Shikoyat oqimi tez orada ishga tushadi.',
+    views: 'ko‘rildi',
+    reveals: 'bog‘lanish',
+    ownPost: 'Bu sizning e‘loningiz.',
+    verified: '✅ Tasdiqlangan foydalanuvchi',
+  },
+
+  subs: {
+    title: 'Xabarnoma obunalari',
+    empty: 'Obuna yo‘q. Qidiruvni saqlasangiz, mos e‘lon chiqqanda xabar beramiz.',
+    delete: 'O‘chirish',
+    any: 'hammasi',
   },
 
   language: {

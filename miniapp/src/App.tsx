@@ -11,7 +11,9 @@ import { HomePage } from './pages/HomePage';
 import { MyPostsPage } from './pages/MyPostsPage';
 import { NewPostPage } from './pages/NewPostPage';
 import { PreviewPage } from './pages/PreviewPage';
+import { PostDetailPage } from './pages/PostDetailPage';
 import { SearchPage } from './pages/SearchPage';
+import { SubscriptionsPage } from './pages/SubscriptionsPage';
 import { SuccessPage } from './pages/SuccessPage';
 
 /**
@@ -43,7 +45,10 @@ export function App() {
     }
     track(EV.DEEP_LINK_OPEN, { start_param: param });
     if (param.startsWith('ch_')) {
-      navigate(`/success/${param.slice(3)}`);
+      // Kanaldagi post havolasi — e'lon tafsiloti (§8.4).
+      navigate(`/post/${param.slice(3)}`);
+    } else if (param === 'search') {
+      navigate('/search');
     } else if (param === 'new') {
       navigate('/new', { state: { entryPoint: 'bot_button' } });
     } else if (param === 'my') {
@@ -90,6 +95,8 @@ export function App() {
       <Route path="/new" element={<NewPostPage />} />
       <Route path="/new/preview" element={<PreviewPage />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="/post/:postId" element={<PostDetailPage />} />
+      <Route path="/subscriptions" element={<SubscriptionsPage />} />
       <Route path="/my" element={<MyPostsPage />} />
       <Route path="/success/:postId" element={<SuccessPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

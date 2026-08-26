@@ -8,8 +8,8 @@ Uni o'qimasdan kod yozilmaydi.
 
 | Qism | Papka | Holat |
 |---|---|---|
-| Backend + bot (Spring Boot 3.3, Java 17) | `backend/` | 0–2-bosqich tugadi |
-| Mini App (React + Vite + TS) | `miniapp/` | 1-bosqich tugadi |
+| Backend + bot (Spring Boot 3.3, Java 17) | `backend/` | 0–3-bosqich tugadi |
+| Mini App (React + Vite + TS) | `miniapp/` | 1- va 3-bosqich tugadi |
 | Admin dashboard (React + Vite + TS) | `admin/` | 4-bosqich |
 | Hujjatlar | `docs/` | [EVENTS.md](docs/EVENTS.md), [METRICS.md](docs/METRICS.md) |
 
@@ -53,6 +53,14 @@ DB_USERNAME=postgres DB_PASSWORD=... BOT_TOKEN=... \
 Flyway migratsiyalarni o'zi qo'llaydi. `ddl-auto=validate` — Hibernate sxemani
 **o'zgartirmaydi**, faqat tekshiradi (§1.3).
 
+**Diqqat:** `V4` migratsiyasi matn qidiruvi uchun `unaccent` extension'ini
+yaratadi va bu bir marta superuser huquqini talab qiladi. DB foydalanuvchisi
+superuser bo'lmasa, migratsiyadan oldin bir marta qo'lda bajaring:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS unaccent;
+```
+
 ### Mini App
 
 ```bash
@@ -69,17 +77,17 @@ botdan oching (dev'da `ngrok` yoki `cloudflared` bilan tunnel).
 ```bash
 npm run lint                  # tsc --noEmit
 npm run test                  # Vitest
-npm run build                 # dist/ ≈98 KB gzip (§9.5 chegarasi 200 KB)
+npm run build                 # dist/ ≈103 KB gzip (§9.5 chegarasi 200 KB)
 ```
 
 ## 3. Testlar
 
 ```bash
 cd backend
-./mvnw test                   # 101 test: unit + Testcontainers integratsiya
+./mvnw test                   # 145 test: unit + Testcontainers integratsiya
 
 cd ../miniapp
-npm run test                  # 22 test: forma mapping, i18n, checklist gating
+npm run test                  # 44 test: forma mapping, qidiruv filtrlari, i18n, checklist
 ```
 
 Integratsiya testlari Testcontainers orqali haqiqiy PostgreSQL 16 ko'taradi, ya'ni
@@ -206,9 +214,18 @@ To'liq ro'yxat — `CLAUDE.md` §12. Hozir mavjud:
 | `POST /api/miniapp/session` | `Authorization: tma <initData>` | profil, ToS/Privacy roziligi, til, `start_param` |
 | `GET /api/miniapp/reference` | initData | aeroport, kategoriya, koridor (1 soat kesh) |
 | `POST /api/miniapp/posts` | initData | e'lon yaratish va kanalga chiqarish |
+| `GET /api/miniapp/posts` | initData | qidiruv: filtrlar + keyset pagination |
+| `GET /api/miniapp/posts/{id}` | initData | e'lon tafsiloti — **kontaktsiz** |
+| `POST /api/miniapp/posts/{id}/reveal-contact` | initData | kontaktni ochadi va yozib qo'yadi |
 | `GET /api/miniapp/my/posts[/{id}]` | initData | faqat o'z e'lonlari |
+| `GET/POST/DELETE /api/miniapp/subscriptions` | initData | xabarnoma obunalari |
 | `GET/PUT/DELETE /api/miniapp/drafts` | initData | forma autosave |
 | `POST /api/miniapp/events` | initData | analitika event batch'i |
+
+Qidiruv `?type=&direction=&origin=&dest=&dateFrom=&dateTo=&categories=&priceMax=`
+`&currency=&verifiedOnly=&q=&sort=&cursor=&size=` parametrlarini oladi.
+Sahifalash **keyset** (offset emas): javobdagi `nextCursor` keyingi so'rovga
+beriladi. `totalCount` faqat birinchi sahifada keladi.
 
 Mini App'ning **har bir** so'rovi `initData` HMAC imzosi bilan tekshiriladi (§7.1).
 `user_id` request body'dan olinmaydi — faqat imzolangan `initData`dan.

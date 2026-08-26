@@ -1004,13 +1004,13 @@ GET    /health
 - [x] `/mening_malumotlarim` — eksport va o'chirish
 
 ### 3-bosqich — Qidiruv
-- [ ] `GET /posts` to'liq filtrlar + keyset pagination
-- [ ] `tsvector` matn qidiruvi + trigger
-- [ ] Mini App qidiruv ekrani + filtr paneli + natija kartalari
-- [ ] `/post/:id` tafsilot + "Bog'lanish" (reveal)
-- [ ] Har bir qidiruv `search_queries`ga yoziladi
-- [ ] Natijasiz qidiruvda obuna taklifi
-- [ ] Saqlangan qidiruv → obuna
+- [x] `GET /posts` to'liq filtrlar + keyset pagination
+- [x] `tsvector` matn qidiruvi + trigger (+ tutuq belgisi normalizatsiyasi)
+- [x] Mini App qidiruv ekrani + filtr paneli + natija kartalari
+- [x] `/post/:id` tafsilot + "Bog'lanish" (reveal)
+- [x] Har bir qidiruv `search_queries`ga yoziladi (birinchi sahifada)
+- [x] Natijasiz qidiruvda obuna taklifi
+- [x] Saqlangan qidiruv → obuna (xabarnoma yuborish — 5-bosqich)
 
 ### 4-bosqich — Analitika va admin dashboard
 - [ ] Metrikalar uchun SQL view'lar (`docs/METRICS.md`)

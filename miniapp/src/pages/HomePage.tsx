@@ -54,6 +54,8 @@ export function HomePage() {
         />
       </div>
 
+      <GhostButton label={`🔔 ${t.subs.title}`} onClick={() => navigate('/subscriptions')} />
+
       <div className={styles.card}>
         <span className={styles.label}>{t.language.title}</span>
         <div className={styles.row}>
