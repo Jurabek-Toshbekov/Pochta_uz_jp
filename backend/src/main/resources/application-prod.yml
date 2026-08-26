@@ -1,0 +1,15 @@
+# Prod profili. Bot webhook rejimida ishlaydi (§13, 2-bosqich).
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: true
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+
+logging:
+  level:
+    uz.pochtajp: INFO

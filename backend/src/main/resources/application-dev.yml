@@ -1,0 +1,11 @@
+# Lokal ishlab chiqish profili. Bot long polling rejimida ishlaydi (§13, 2-bosqich).
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: true
+
+logging:
+  level:
+    uz.pochtajp: DEBUG
+    org.flywaydb: INFO
