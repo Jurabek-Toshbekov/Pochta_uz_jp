@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 
 /**
@@ -7,6 +7,27 @@ import react from '@vitejs/plugin-react';
  * nisbiy yo'l bilan so'rov yuboradi va Vite uni shu manzilga uzatadi.
  */
 const BACKEND = 'http://localhost:8080';
+
+/**
+ * Backendga uzatish sozlamasi.
+ *
+ * `Origin` headeri ataylab olib tashlanadi: proxy brauzer emas. Agar
+ * brauzerning Origin'i (tunnel domeni) o'zgarishsiz uzatilsa, backend uni
+ * cross-origin so'rov deb hisoblaydi va CORS ro'yxatida yo'qligi uchun
+ * 403 qaytaradi (§7.2 — CORS faqat MINIAPP_URL uchun ochiq).
+ *
+ * Origin'siz so'rov CORS tekshiruviga umuman tushmaydi — bu to'g'ri,
+ * chunki so'rovni brauzer emas, dev server yuboradi.
+ */
+const backendProxy: ProxyOptions = {
+  target: BACKEND,
+  changeOrigin: true,
+  configure: (proxy) => {
+    proxy.on('proxyReq', (proxyReq) => {
+      proxyReq.removeHeader('origin');
+    });
+  },
+};
 
 export default defineConfig({
   plugins: [react()],
@@ -47,9 +68,9 @@ export default defineConfig({
      * yetadi va CORS muammosi butunlay yo'qoladi — so'rov same-origin.
      */
     proxy: {
-      '/api': { target: BACKEND, changeOrigin: true },
-      '/health': { target: BACKEND, changeOrigin: true },
-      '/webhook': { target: BACKEND, changeOrigin: true },
+      '/api': backendProxy,
+      '/health': backendProxy,
+      '/webhook': backendProxy,
     },
   },
 

@@ -94,10 +94,15 @@ cloudflared tunnel --url http://localhost:5173     # yoki: ngrok http 5173
 Keyin @BotFather → bot → *Bot Settings* → *Menu Button* / *Mini App* →
 tunnel URL'ini qo'yish.
 
-**ngrok bepul rejasida** brauzerga bir marta "You are about to visit…"
-ogohlantirish sahifasi chiqadi (`ERR_NGROK_6024`) va Telegram webview'ida ham
-ko'rinadi. "Visit Site" bosilgandan keyin ilova normal ishlaydi (cookie
-qo'yiladi). `cloudflared` da bunday sahifa yo'q.
+**ngrok bepul rejasi Telegram uchun ishlamaydi.** Brauzerdan kelgan HTML
+so'rovga "You are about to visit…" sahifasi qaytadi (`ERR_NGROK_6024`) va
+Telegram webview'i Mini App o'rniga aynan shuni ko'rsatadi. Traffic Policy
+bilan `ngrok-skip-browser-warning` headerini qo'shish ham yordam bermaydi —
+ogohlantirish policy'dan oldin qo'llanadi (sinab ko'rilgan:
+`scripts/ngrok-skip-warning.yml`). Yechim: `cloudflared` yoki pullik ngrok.
+
+Tunnel URL'i `cloudflared`da har ishga tushirishda o'zgaradi, ya'ni
+@BotFather'da qayta sozlash kerak bo'ladi.
 
 ```bash
 npm run lint                  # tsc --noEmit
