@@ -203,7 +203,9 @@ public class NotificationService {
         }
 
         int maxPerDay = settingsService.number(SettingKeys.NOTIFICATIONS_MAX_PER_DAY, DEFAULT_MAX_PER_DAY);
-        long alreadySent = sentRepository.countByUserIdAndStatusAndCreatedAtAfter(
+        // Mos e'lonlar emas, YUBORILGAN XABARLAR sanaladi (§10.3): bitta
+        // digestda 6 ta e'lon bo'lsa ham foydalanuvchi bitta xabar oladi.
+        long alreadySent = sentRepository.countMessages(
                 userId, NotificationStatus.SENT, Instant.now().minus(DAY));
         if (alreadySent >= maxPerDay) {
             // Chegara oshdi: bugungi qolgan xabarlar bloklanadi. Ertaga
@@ -221,7 +223,12 @@ public class NotificationService {
 
         boolean delivered = notifier.sendMatchDigest(user, posts);
         NotificationStatus status = delivered ? NotificationStatus.SENT : NotificationStatus.FAILED;
-        rows.forEach(row -> finish(row, status));
+        // Butun digest — bitta xabar, demak bitta batch.
+        UUID batchId = UUID.randomUUID();
+        rows.forEach(row -> {
+            row.setBatchId(batchId);
+            finish(row, status);
+        });
 
         if (delivered) {
             eventLogger.track(TrackedEvent.of(EventName.NOTIFICATION_SENT, EventSource.SYSTEM)
@@ -269,6 +276,8 @@ public class NotificationService {
 
         NotificationSent row = row(userId, post.getId(), null, kind,
                 delivered ? NotificationStatus.SENT : NotificationStatus.FAILED);
+        // Har biri alohida xabar — o'z batch'i (kunlik chegara shuni sanaydi).
+        row.setBatchId(UUID.randomUUID());
         sentRepository.save(row);
 
         if (delivered) {

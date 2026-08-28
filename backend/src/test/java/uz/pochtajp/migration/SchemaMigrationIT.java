@@ -23,7 +23,7 @@ class SchemaMigrationIT extends AbstractIntegrationTest {
                 "SELECT version FROM flyway_schema_history WHERE success = true ORDER BY installed_rank",
                 String.class);
 
-        assertThat(versions).containsExactly("1", "2", "3", "4", "5", "6");
+        assertThat(versions).containsExactly("1", "2", "3", "4", "5", "6", "7");
     }
 
     @Test
@@ -106,6 +106,17 @@ class SchemaMigrationIT extends AbstractIntegrationTest {
                 ORDER BY column_name
                 """, String.class);
         assertThat(columns).containsExactly("migrated_at", "migrated_post_id", "migration_note", "migration_status");
+    }
+
+    @Test
+    @DisplayName("notifications_sent da batch_id bor — kunlik chegara xabarlarni sanaydi (§10.3)")
+    void notificationBatchColumnExists() {
+        Integer exists = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM information_schema.columns
+                WHERE table_schema = current_schema()
+                  AND table_name = 'notifications_sent' AND column_name = 'batch_id'
+                """, Integer.class);
+        assertThat(exists).isEqualTo(1);
     }
 
     @Test

@@ -96,14 +96,20 @@
   box-shadow: inset 0 0 0 1px var(--indigo);
 }
 
+/* `display: block` shart: ular <span>, ya'ni inline. Blok bo'lmasa
+   sarlavha va izoh bitta qatorga yopishib qoladi ("...ketamanUchayotgan")
+   va `margin-top` ham ta'sir qilmaydi. */
 .choiceTitle {
+  display: block;
   font-size: var(--text-md);
   font-weight: 700;
 }
 
 .choiceHint {
+  display: block;
   margin-top: 4px;
   font-size: var(--text-sm);
+  line-height: 1.35;
   color: var(--text-muted);
 }
 

@@ -26,7 +26,7 @@ class BotWebhookControllerTest {
 
     private BotWebhookController controllerWithSecret(String secret) {
         BotProperties properties = new BotProperties(
-                "1:token", "test_bot", null, null, null, 86_400L, BotMode.WEBHOOK, null, secret);
+                "1:token", "test_bot", null, null, null, 86_400L, BotMode.WEBHOOK, null, secret, null);
         return new BotWebhookController(handler, properties);
     }
 

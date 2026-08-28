@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import uz.pochtajp.common.ApiErrorResponse;
 import uz.pochtajp.common.exception.ApiException;
 import uz.pochtajp.common.exception.ForbiddenException;
+import uz.pochtajp.common.exception.UnauthorizedException;
 import uz.pochtajp.domain.User;
 import uz.pochtajp.domain.enums.UserRole;
 import uz.pochtajp.domain.enums.UserStatus;
@@ -68,7 +69,7 @@ public class AdminJwtAuthFilter extends OncePerRequestFilter {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         try {
             if (header == null || !header.startsWith(SCHEME)) {
-                throw new ForbiddenException("Kirish tokeni yo'q. Qaytadan kiring.");
+                throw new UnauthorizedException("Kirish tokeni yo'q. Qaytadan kiring.");
             }
             AdminPrincipal fromToken = jwtService.parse(
                     header.substring(SCHEME.length()).trim(), uz.pochtajp.domain.enums.AdminTokenType.ACCESS);

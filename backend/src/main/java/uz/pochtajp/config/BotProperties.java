@@ -17,6 +17,9 @@ import org.springframework.validation.annotation.Validated;
  * @param mode              BOT_MODE — polling (dev) | webhook (prod) | off
  * @param webhookBaseUrl    WEBHOOK_BASE_URL — webhook rejimida backend'ning tashqi manzili
  * @param webhookSecretToken WEBHOOK_SECRET_TOKEN — {@code X-Telegram-Bot-Api-Secret-Token} (§7.2)
+ * @param apiUrl            BOT_API_URL — Telegram API manzili. Bo'sh bo'lsa rasmiy
+ *                          {@code https://api.telegram.org}. Faqat lokal sinov uchun
+ *                          o'zgartiriladi (maket server); prod'da hech qachon to'ldirilmaydi.
  */
 @Validated
 @ConfigurationProperties(prefix = "bot")
@@ -29,7 +32,8 @@ public record BotProperties(
         long initDataMaxAgeSeconds,
         BotMode mode,
         String webhookBaseUrl,
-        String webhookSecretToken
+        String webhookSecretToken,
+        String apiUrl
 ) {
 
     public BotProperties {

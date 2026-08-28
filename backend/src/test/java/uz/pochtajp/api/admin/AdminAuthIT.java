@@ -57,10 +57,20 @@ class AdminAuthIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("Tokensiz admin endpoint 403 qaytaradi")
+    @DisplayName("Tokensiz admin endpoint 401 qaytaradi")
     void rejectsRequestWithoutToken() throws Exception {
+        // 401, 403 emas: kim ekanligi umuman aniqlanmagan. Panel shu farqqa
+        // qarab token yangilaydi yoki kirish ekraniga qaytaradi.
         mockMvc.perform(get("/api/admin/overview"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    @DisplayName("Buzilgan token 401 qaytaradi")
+    void rejectsMalformedToken() throws Exception {
+        mockMvc.perform(get("/api/admin/overview").header("Authorization", "Bearer soxta.token.qiymat"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -93,7 +103,7 @@ class AdminAuthIT extends AbstractIntegrationTest {
         mockMvc.perform(post("/api/admin/auth/telegram")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"" + code + "\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -102,7 +112,7 @@ class AdminAuthIT extends AbstractIntegrationTest {
         mockMvc.perform(post("/api/admin/auth/telegram")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"ZZZZZZZZ\"}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -169,7 +179,7 @@ class AdminAuthIT extends AbstractIntegrationTest {
         String refresh = objectMapper.readTree(body).get("refreshToken").asText();
 
         mockMvc.perform(get("/api/admin/overview").header("Authorization", "Bearer " + refresh))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -180,7 +190,10 @@ class AdminAuthIT extends AbstractIntegrationTest {
 
         jdbcTemplate.update("UPDATE users SET role = 'USER' WHERE id = ?", adminId);
 
+        // Bu yerda aynan 403: token haqiqiy, kim ekanligi ma'lum — huquq yo'q.
+        // Token yangilash yordam bermaydi, shuning uchun panel darhol chiqaradi.
         mockMvc.perform(get("/api/admin/overview").header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
 }

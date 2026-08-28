@@ -5,9 +5,14 @@ import type { ApiError, LoginResponse } from './types';
  *
  * Ikkita ish qiladi:
  *  - har bir so'rovga `Authorization: Bearer <access>` qo'shadi;
- *  - access muddati tugab 403 kelsa, refresh bilan bir marta yangilaydi va
+ *  - access muddati tugab 401 kelsa, refresh bilan bir marta yangilaydi va
  *    so'rovni takrorlaydi. Foydalanuvchi 2 soatda bir marta chiqib
  *    ketmasligi kerak.
+ *
+ * 401 va 403 farqi muhim: 401 — "kim ekaningiz aniqlanmadi" (token yo'q,
+ * yaroqsiz yoki eskirgan) — yangilash mantiqiy; 403 — "huquqingiz yo'q"
+ * (rol olib qo'yilgan, hisob bloklangan) — yangilash foydasiz, chunki
+ * yangi token ham xuddi shu javobni oladi.
  *
  * Token `localStorage`da: admin paneli bitta ish stolida ochiladi va
  * sahifa yangilanganda qayta kirish talab qilinmasligi kerak.
@@ -86,19 +91,26 @@ export function setSessionExpiredHandler(handler: SessionExpiredHandler): void {
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
-  /** Kirish oqimi: token qo'shilmaydi va 403 da refresh urinilmaydi. */
+  /** Kirish oqimi: token qo'shilmaydi va 401 da refresh urinilmaydi. */
   anonymous?: boolean;
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const response = await send(path, options);
 
-  if (response.status === 403 && !options.anonymous && tokenStore.refresh()) {
+  if (response.status === 401 && !options.anonymous && tokenStore.refresh()) {
     const refreshed = await tryRefresh();
     if (refreshed) {
       const retry = await send(path, options);
       return handle<T>(retry);
     }
+    tokenStore.clear();
+    onSessionExpired();
+  }
+
+  // Huquq olib qo'yilgan yoki hisob bloklangan: token yangilash yordam
+  // bermaydi, shuning uchun darhol kirish ekraniga qaytariladi.
+  if (response.status === 403 && !options.anonymous) {
     tokenStore.clear();
     onSessionExpired();
   }

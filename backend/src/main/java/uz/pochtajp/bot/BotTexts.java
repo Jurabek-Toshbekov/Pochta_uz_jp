@@ -53,6 +53,7 @@ public final class BotTexts {
             String adminNoAccess,
             String notifyMatchOne,
             String notifyMatchMany,
+            String notifyMatchMore,
             String btnOpenPost,
             String btnOpenSearch,
             String notifyExpiry,
@@ -205,6 +206,7 @@ public final class BotTexts {
             🔔 <b>Sizga mos %d ta yangi e'lon bor</b>
 
             %s""",
+            "…va yana %d ta",
             "👁 E'lonni ko'rish",
             "🔍 Qidiruvda ko'rish",
             """
@@ -370,6 +372,7 @@ public final class BotTexts {
             🔔 <b>Сизга мос %d та янги эълон бор</b>
 
             %s""",
+            "…яна %d та",
             "👁 Эълонни кўриш",
             "🔍 Қидирувда кўриш",
             """
@@ -532,6 +535,7 @@ public final class BotTexts {
             🔔 <b>По вашей подписке: %d новых объявлений</b>
 
             %s""",
+            "…ещё %d",
             "👁 Открыть объявление",
             "🔍 Открыть поиск",
             """

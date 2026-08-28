@@ -18,8 +18,25 @@ public interface NotificationSentRepository extends JpaRepository<NotificationSe
     /** Takroriy xabar yubormaslik uchun (§10.3). */
     boolean existsByPostIdAndUserIdAndKind(UUID postId, UUID userId, NotificationKind kind);
 
-    /** Kunlik chegara: shu oynada nechta xabar ketgan. */
-    long countByUserIdAndStatusAndCreatedAtAfter(UUID userId, NotificationStatus status, Instant since);
+    /**
+     * Kunlik chegara: shu oynada nechta <b>xabar</b> ketgan (§10.3).
+     *
+     * <p>Qatorlar emas, {@code batch_id} sanaladi. Bitta digest ichida
+     * nechta mos e'lon bo'lsa ham foydalanuvchi bitta xabar oladi, demak
+     * chegaraga ham bitta bo'lib hisoblanishi kerak. Qatorlarni sanash
+     * 6 ta mos e'lonli bitta digestni "6 ta xabar" deb ko'rsatardi va
+     * kun oxirigacha barcha xabarnomalarni bloklab qo'yardi.
+     */
+    @Query("""
+            SELECT count(DISTINCT n.batchId) FROM NotificationSent n
+            WHERE n.userId = :userId
+              AND n.status = :status
+              AND n.createdAt > :since
+              AND n.batchId IS NOT NULL
+            """)
+    long countMessages(@Param("userId") UUID userId,
+                       @Param("status") NotificationStatus status,
+                       @Param("since") Instant since);
 
     /**
      * Digest navbati: yuborilishi kutayotgan xabarlar, eng eskisi oldin.

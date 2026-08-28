@@ -84,6 +84,9 @@ bot:
   mode: ${BOT_MODE:polling}
   webhook-base-url: ${WEBHOOK_BASE_URL:}
   webhook-secret-token: ${WEBHOOK_SECRET_TOKEN:}
+  # Faqat lokal sinov uchun: Telegram API o'rniga maket server manzili.
+  # Prod'da hech qachon to'ldirilmaydi — bo'sh bo'lsa api.telegram.org ishlatiladi.
+  api-url: ${BOT_API_URL:}
 
 # --- Ilova sozlamalari (AppProperties) ---
 app:

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uz.pochtajp.common.exception.ForbiddenException;
+import uz.pochtajp.common.exception.UnauthorizedException;
 import uz.pochtajp.config.AppProperties;
 import uz.pochtajp.domain.enums.AdminTokenType;
 import uz.pochtajp.domain.enums.UserRole;
@@ -43,6 +44,8 @@ class AdminJwtServiceTest {
         assertThat(parsed.role()).isEqualTo(UserRole.ADMIN);
     }
 
+    // Token bilan bog'liq har qanday muammo — 401 (kim ekanligi aniqlanmadi),
+    // 403 emas. Panel bu farqqa qarab tokenni yangilaydi yoki chiqaradi.
     @Test
     @DisplayName("Refresh tokenni access sifatida ishlatib bo'lmaydi")
     void refreshTokenIsNotAccepted() {
@@ -50,7 +53,7 @@ class AdminJwtServiceTest {
         String refresh = service.issueRefreshToken(admin());
 
         assertThatThrownBy(() -> service.parse(refresh, AdminTokenType.ACCESS))
-                .isInstanceOf(ForbiddenException.class);
+                .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
@@ -60,7 +63,7 @@ class AdminJwtServiceTest {
         AdminJwtService other = service("secret-two");
 
         assertThatThrownBy(() -> other.parse(token, AdminTokenType.ACCESS))
-                .isInstanceOf(ForbiddenException.class);
+                .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
@@ -71,7 +74,7 @@ class AdminJwtServiceTest {
         String tampered = token.substring(0, token.length() - 2) + "xy";
 
         assertThatThrownBy(() -> service.parse(tampered, AdminTokenType.ACCESS))
-                .isInstanceOf(ForbiddenException.class);
+                .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.pochtajp.common.exception.ForbiddenException;
+import uz.pochtajp.common.exception.UnauthorizedException;
 import uz.pochtajp.common.exception.RateLimitException;
 import uz.pochtajp.domain.AdminLoginCode;
 import uz.pochtajp.domain.User;
@@ -109,15 +110,15 @@ public class AdminAuthService {
     public TokenPair exchangeCode(String rawCode) {
         String normalized = normalize(rawCode);
         if (normalized.length() != CODE_LENGTH) {
-            throw new ForbiddenException("Kod noto'g'ri yoki muddati tugagan.");
+            throw new UnauthorizedException("Kod noto'g'ri yoki muddati tugagan.");
         }
 
         AdminLoginCode code = codeRepository
                 .findFirstByCodeHashAndUsedAtIsNullAndDeletedAtIsNull(sha256Hex(normalized))
-                .orElseThrow(() -> new ForbiddenException("Kod noto'g'ri yoki muddati tugagan."));
+                .orElseThrow(() -> new UnauthorizedException("Kod noto'g'ri yoki muddati tugagan."));
 
         if (code.getExpiresAt().isBefore(Instant.now())) {
-            throw new ForbiddenException("Kod noto'g'ri yoki muddati tugagan.");
+            throw new UnauthorizedException("Kod noto'g'ri yoki muddati tugagan.");
         }
 
         User user = userRepository.findById(code.getUserId())

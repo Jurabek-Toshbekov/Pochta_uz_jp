@@ -152,12 +152,14 @@ class NotificationFlowIT extends AbstractIntegrationTest {
         UUID subscriber = fixtures().insertUser(830013L, "obunachi6", "NONE", 0);
         subscribe(subscriber, "JP_UZ", "CARRY", null);
 
-        // Chegara 5 — beshta yuborilgan xabar yozib qo'yamiz.
+        // Chegara 5 — beshta yuborilgan XABAR yozib qo'yamiz. Har birining
+        // o'z `batch_id`si bor, chunki chegara qatorlarni emas, xabarlarni
+        // sanaydi (§10.3).
         for (int i = 0; i < 5; i++) {
             jdbcTemplate.update("""
-                    INSERT INTO notifications_sent (user_id, status, kind)
-                    VALUES (?, 'SENT', 'MATCH')
-                    """, subscriber);
+                    INSERT INTO notifications_sent (user_id, status, kind, batch_id)
+                    VALUES (?, 'SENT', 'MATCH', ?)
+                    """, subscriber, UUID.randomUUID());
         }
 
         notificationService.enqueueMatches(publishedPost(owner));
@@ -167,6 +169,55 @@ class NotificationFlowIT extends AbstractIntegrationTest {
         Long blocked = jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM notifications_sent WHERE status = 'BLOCKED'", Long.class);
         assertThat(blocked).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Ko'p e'lonli digest kunlik chegarada BITTA xabar sifatida sanaladi")
+    void digestCountsAsOneMessageAgainstDailyCap() {
+        UUID owner = fixtures().insertUser(830020L, "egasi10", "NONE", 0);
+        UUID subscriber = fixtures().insertUser(830021L, "obunachi9", "NONE", 0);
+        subscribe(subscriber, "JP_UZ", "CARRY", null);
+
+        // Bitta digestda 6 ta e'lon — chegaradan (5) ko'p, lekin bu BITTA xabar.
+        for (int i = 0; i < 6; i++) {
+            notificationService.enqueueMatches(publishedPost(owner));
+        }
+        notificationService.flushQueue();
+        assertThat(botMessenger.messages()).hasSize(1);
+
+        // Ilgari bu yerda chegara "oshgan" hisoblanardi (6 qator >= 5) va
+        // keyingi xabar bloklanardi — foydalanuvchi bitta xabar olgan bo'lsa ham.
+        notificationService.enqueueMatches(publishedPost(owner));
+        notificationService.flushQueue();
+
+        assertThat(botMessenger.messages()).hasSize(2);
+        Long blocked = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM notifications_sent WHERE status = 'BLOCKED'", Long.class);
+        assertThat(blocked).isZero();
+        Long batches = jdbcTemplate.queryForObject("""
+                SELECT count(DISTINCT batch_id) FROM notifications_sent
+                WHERE user_id = ? AND status = 'SENT'
+                """, Long.class, subscriber);
+        assertThat(batches).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Digestda ko'rsatilmagan e'lonlar soni aytiladi")
+    void digestMentionsHiddenPostCount() {
+        UUID owner = fixtures().insertUser(830022L, "egasi11", "NONE", 0);
+        UUID subscriber = fixtures().insertUser(830023L, "obunachi10", "NONE", 0);
+        subscribe(subscriber, "JP_UZ", "CARRY", null);
+
+        for (int i = 0; i < 5; i++) {
+            notificationService.enqueueMatches(publishedPost(owner));
+        }
+        notificationService.flushQueue();
+
+        // Sarlavhada 5 ta deyilgan, ro'yxatda 3 ta — qolgan 2 tasi aytilishi
+        // kerak, aks holda xabar o'ziga o'zi zid bo'ladi.
+        String text = botMessenger.lastMessage().text();
+        assertThat(text).contains("5");
+        assertThat(text).contains("2");
     }
 
     @Test

@@ -163,12 +163,16 @@ export function NewPostPage() {
   );
 }
 
+/**
+ * Keyingi qadamga o'tish uchun nima yetishmayotganini aytadi.
+ * Sarlavhani takrorlamaydi — u yuqorida allaqachon turibdi (§9.4).
+ */
 function hintFor(step: StepKey, t: ReturnType<typeof useT>): string {
   switch (step) {
     case STEP.TYPE:
-      return t.step1.title;
+      return t.step1.incomplete;
     case STEP.ROUTE:
-      return t.step2.title;
+      return t.step2.incomplete;
     case STEP.CARGO:
       return t.step3.categoriesHint;
     case STEP.CONTACT:

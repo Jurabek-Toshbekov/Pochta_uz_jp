@@ -69,6 +69,12 @@ public class BotNotifier {
                 .map(BotNotifier::summary)
                 .reduce((first, second) -> first + "\n" + second)
                 .orElse("");
+        // Sarlavhada aytilgan son bilan ro'yxat mos kelishi kerak: aks holda
+        // "6 ta yangi e'lon" deb yozib 3 tasini ko'rsatish xatoga o'xshaydi.
+        int hidden = posts.size() - DIGEST_PREVIEW;
+        if (hidden > 0) {
+            preview = preview + "\n" + texts.notifyMatchMore().formatted(hidden);
+        }
         return messenger.sendHtml(chatId,
                 texts.notifyMatchMany().formatted(posts.size(), preview),
                 keyboards.single(texts.btnOpenSearch(), "/search"));

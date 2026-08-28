@@ -46,6 +46,16 @@ public class NotificationSent {
     @Column(name = "kind", nullable = false, length = 24)
     private NotificationKind kind = NotificationKind.MATCH;
 
+    /**
+     * Bitta yuborilgan xabar identifikatori (§10.3).
+     *
+     * <p>Digest ichidagi barcha qatorlarda bir xil bo'ladi — kunlik chegara
+     * shu bilan e'lonlarni emas, XABARlarni sanaydi. Navbatda turgan
+     * ({@code PENDING}) qatorda hali {@code null}.
+     */
+    @Column(name = "batch_id")
+    private UUID batchId;
+
     @Column(name = "opened_at")
     private Instant openedAt;
 
@@ -99,6 +109,14 @@ public class NotificationSent {
 
     public void setStatus(NotificationStatus status) {
         this.status = status;
+    }
+
+    public UUID getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(UUID batchId) {
+        this.batchId = batchId;
     }
 
     public Instant getOpenedAt() {

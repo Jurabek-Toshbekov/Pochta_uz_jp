@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
 import uz.pochtajp.common.exception.ForbiddenException;
+import uz.pochtajp.common.exception.UnauthorizedException;
 import uz.pochtajp.config.AppProperties;
 import uz.pochtajp.domain.enums.AdminTokenType;
 import uz.pochtajp.domain.enums.UserRole;
@@ -117,7 +118,7 @@ public class AdminJwtService {
     /**
      * Tokenni tekshiradi va ichidagi da'voni qaytaradi.
      *
-     * @throws ForbiddenException imzo, muddat yoki tur mos kelmasa
+     * @throws UnauthorizedException imzo, muddat yoki tur mos kelmasa
      */
     public AdminPrincipal parse(String token, AdminTokenType expectedType) {
         requireEnabled();
@@ -126,15 +127,15 @@ public class AdminJwtService {
             jwt = decoder.decode(token);
         } catch (JwtException ex) {
             // Token matni log'ga yozilmaydi.
-            throw new ForbiddenException("Token yaroqsiz. Qaytadan kiring.");
+            throw new UnauthorizedException("Token yaroqsiz. Qaytadan kiring.");
         }
         // `getIssuer()` qiymatni URL deb o'qishga urinadi — bizniki URL emas,
         // shuning uchun da'vo matn sifatida olinadi.
         if (!ISSUER.equals(jwt.getClaimAsString("iss"))) {
-            throw new ForbiddenException("Token yaroqsiz. Qaytadan kiring.");
+            throw new UnauthorizedException("Token yaroqsiz. Qaytadan kiring.");
         }
         if (!expectedType.name().equals(jwt.getClaimAsString(CLAIM_TYPE))) {
-            throw new ForbiddenException("Token turi mos emas. Qaytadan kiring.");
+            throw new UnauthorizedException("Token turi mos emas. Qaytadan kiring.");
         }
         UserRole role = parseRole(jwt.getClaimAsString(CLAIM_ROLE));
         Long telegramId = jwt.getClaim(CLAIM_TELEGRAM_ID);
@@ -146,7 +147,7 @@ public class AdminJwtService {
         try {
             return UserRole.valueOf(raw);
         } catch (IllegalArgumentException | NullPointerException ex) {
-            throw new ForbiddenException("Token yaroqsiz. Qaytadan kiring.");
+            throw new UnauthorizedException("Token yaroqsiz. Qaytadan kiring.");
         }
     }
 
