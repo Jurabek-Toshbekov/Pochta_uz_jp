@@ -800,11 +800,52 @@ Qorong'i temada `--paper` va `--ink` almashadi; `--indigo` `#5B7FD1` ga yorishad
 - Mobil birinchi navbatda (360px dan boshlab)
 - Klaviatura fokusi ko'rinadigan
 - Har bir input `aria-label` bilan
+- Xavfsiz zona hisobga olingan — iPhone kesigi ostida matn qolmaydi (§9.6)
 - Offline/xato holati — qayta urinish tugmasi bilan
 - Draft avtomatik saqlanadi, ilova yopilib ochilsa o'sha joydan davom etadi
 - Birinchi yuklanish < 200KB gzip
 
 ---
+
+### 9.6 XAVFSIZ ZONA (safe area) — majburiy
+
+> Bu Mini App, oddiy veb-sahifa emas. iPhone'da kontent qurilma kesigi
+> ostiga tushsa, matn shunchaki yo'qoladi va foydalanuvchi buni xato deb
+> hisoblaydi. Quyidagilar tavsiya emas — talab.
+
+1. **Hech qanday matn yoki boshqaruv elementi viewport'ning eng chetiga
+   tegib turmaydi.** Yuqoridan `var(--safe-top)`, pastdan `var(--safe-bottom)`,
+   yon tomonlardan `var(--safe-left)` / `var(--safe-right)` qo'shiladi.
+   Bu tokenlar `tokens.css` da e'lon qilingan va uch manbani birlashtiradi:
+   - `env(safe-area-inset-*)` — WKWebView beradi (`viewport-fit=cover` shart,
+     `index.html` da bor);
+   - Telegram 8.0+ `safeAreaInset` — qurilma kesigi (dynamic island, kamera);
+   - Telegram 8.0+ `contentSafeAreaInset` — Telegram o'z boshqaruvlari
+     egallagan joy. Rasmiy hujjatga ko'ra oxirgi ikkisi **qo'shiladi**.
+
+2. **Har bir to'liq ekran konteyneri `.page` klassidan foydalanadi.**
+   `.page` xavfsiz zonani o'zi hisoblaydi. Yangi ekran yasaganda uni
+   chetlab o'tib, o'z `padding`ini yozish taqiqlangan.
+
+3. **`position: sticky` yoki `fixed` element qo'shilsa**, uning `top` qiymati
+   `calc(var(--safe-top) + N)` bo'lishi shart. Yopishqoq sarlavha xavfsiz
+   zonani hisobga olmasa, aynan u kesik ostida qoladi.
+
+4. **`disableVerticalSwipes()` doim yoqiladi** (`lib/safeArea.ts`). Aks holda
+   foydalanuvchi sahifani yuqoriga ortiqcha surganda Telegram buni "yopish"
+   imosi deb tushunadi, webview siljiydi va tepadagi matn kesik ostiga kiradi.
+   Shu bilan birga `html`/`body` da `overscroll-behavior-y: none` turadi.
+
+5. **Pastki bo'shliq `MainButton` uchun** kamida 96px + `var(--safe-bottom)`.
+   Telegram tugmasi kontentni yopib qo'ymasligi kerak.
+
+6. **Sinov mezoni:** dynamic island'li iPhone (14 Pro va yangiroq) va
+   kesikli Android'da ilova ochilib, sahifa yuqoriga oxirigacha suriladi —
+   birorta ham harf yo'qolmasligi kerak. Emulyatorda tekshirish yetarli emas,
+   chunki `safeAreaInset` faqat haqiqiy mijozda to'ldiriladi.
+
+Amalga oshirilishi: `miniapp/src/lib/safeArea.ts` (+ testlari),
+`tokens.css` dagi `--safe-*` tokenlari, `global.css` dagi `.page`.
 
 ## 10. QIDIRUV (2-bosqich)
 
@@ -1111,3 +1152,5 @@ Vazifa faqat quyidagilarning **hammasi** bajarilganda tugagan hisoblanadi:
 6. **Shubha bo'lsa** — §1 dagi Mutlaq qoidalarga qayt. Ular hamma narsadan ustun.
 7. **Bosqich tugagach** — §13 dagi katakchalarni belgila va qisqacha hisobot ber: nima qilindi, nima qoldi, keyingi qadam nima.
 ```
+10. Yangi UI ekrani xavfsiz zonani hisobga oladi — `.page` ishlatilgan yoki
+    `--safe-*` tokenlari qo'llangan (§9.6)

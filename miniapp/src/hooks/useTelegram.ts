@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import WebApp from '@twa-dev/sdk';
+import { initSafeArea, type SafeAreaCapableWebApp } from '../lib/safeArea';
 
 /**
  * Telegram SDK bilan ishlash (§9.3).
@@ -8,6 +9,7 @@ import WebApp from '@twa-dev/sdk';
  *  - asosiy harakat uchun `MainButton` ishlatiladi, o'z tugmasi yasalmaydi
  *  - qadamlar orasida `BackButton`
  *  - fon va matn ranglari `themeParams`dan olinadi
+ *  - xavfsiz zona hisobga olinadi, vertikal svip o'chiriladi (§9.6)
  */
 
 /** Ilova ochilishida bir marta chaqiriladi. */
@@ -17,6 +19,10 @@ export function initTelegram(): void {
     WebApp.expand();
     applyTheme();
     WebApp.onEvent('themeChanged', applyTheme);
+    // §9.6 — iPhone kamera kesigi ostida matn qolmasligi uchun.
+    // `@twa-dev/sdk@8` turlarida bu metodlar hali yo'q, shuning uchun tor
+    // interfeysga o'tkazamiz (`any` taqiqlangan — §14).
+    initSafeArea(WebApp as unknown as SafeAreaCapableWebApp, document.documentElement);
   } catch {
     // Brauzerda (Telegram tashqarisida) ochilgan bo'lsa jim o'tamiz —
     // ishlab chiqish paytida qulay.

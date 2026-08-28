@@ -6,6 +6,12 @@
   box-sizing: border-box;
 }
 
+html {
+  /* iOS'da rezina effekt (rubber band) — sahifani ortiqcha surganda webview
+     siljiydi va tepadagi matn kesik ostiga tushadi (§9.6). */
+  overscroll-behavior-y: none;
+}
+
 html,
 body {
   margin: 0;
@@ -24,11 +30,15 @@ body {
   min-height: 100dvh;
 }
 
-/* Bitta ustun, 16px chetki bo'shliq (§9.4). 360px dan boshlab ishlaydi. */
+/* Bitta ustun, 16px chetki bo'shliq (§9.4). 360px dan boshlab ishlaydi.
+   Chetki bo'shliqqa xavfsiz zona qo'shiladi: aks holda iPhone'da eng
+   yuqoridagi matn kamera kesigi ostida qoladi (§9.6). Pastdagi 96px —
+   Telegram `MainButton`i uchun joy. */
 .page {
   max-width: 560px;
   margin: 0 auto;
-  padding: var(--gutter) var(--gutter) 96px;
+  padding: calc(var(--gutter) + var(--safe-top)) calc(var(--gutter) + var(--safe-right))
+    calc(96px + var(--safe-bottom)) calc(var(--gutter) + var(--safe-left));
   display: flex;
   flex-direction: column;
   gap: var(--gap-card);
