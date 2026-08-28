@@ -9,11 +9,14 @@ import type {
   PostSearchParams,
   PostSearchResult,
   ReferenceResponse,
+  ReportInput,
+  ReviewInput,
   SessionRequest,
   SessionResponse,
   Subscription,
   SubscriptionInput,
   TrackEventPayload,
+  TrustResponse,
 } from './types';
 
 /** Filtrlarni query-string'ga o'giradi. Bo'sh qiymatlar tashlab yuboriladi. */
@@ -93,6 +96,18 @@ export const api = {
     request<DraftResponse>('/api/miniapp/drafts', { method: 'PUT', body }),
 
   deleteDraft: () => request<void>('/api/miniapp/drafts', { method: 'DELETE' }),
+
+  /** Shikoyat (§7.3). E'lon darhol yopilmaydi — qaror moderatorniki. */
+  report: (body: ReportInput) =>
+    request<TrustResponse>('/api/miniapp/reports', { method: 'POST', body }),
+
+  /** Bitim sherigiga baho (§6.4, 7-band). */
+  review: (body: ReviewInput) =>
+    request<TrustResponse>('/api/miniapp/reviews', { method: 'POST', body }),
+
+  /** Xabarnomadagi havola ochildi — CTR shundan hisoblanadi. */
+  notificationOpened: (postId: string) =>
+    request<void>('/api/miniapp/notifications/opened', { method: 'POST', body: { postId } }),
 
   sendEvents: (events: TrackEventPayload[]) =>
     request<void>('/api/miniapp/events', { method: 'POST', body: { events } }),

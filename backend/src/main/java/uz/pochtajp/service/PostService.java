@@ -25,6 +25,7 @@ import uz.pochtajp.common.exception.NotFoundException;
 import uz.pochtajp.common.exception.RateLimitException;
 import uz.pochtajp.common.exception.ValidationException;
 import uz.pochtajp.config.AppProperties;
+import uz.pochtajp.config.SettingKeys;
 import uz.pochtajp.config.BotProperties;
 import uz.pochtajp.domain.Airport;
 import uz.pochtajp.domain.CargoCategory;
@@ -72,6 +73,7 @@ public class PostService {
     private final CorridorRepository corridorRepository;
     private final EventLogger eventLogger;
     private final AppProperties appProperties;
+    private final SettingsService settingsService;
     private final BotProperties botProperties;
 
     public PostService(PostRepository postRepository,
@@ -82,6 +84,7 @@ public class PostService {
                        CorridorRepository corridorRepository,
                        EventLogger eventLogger,
                        AppProperties appProperties,
+                       SettingsService settingsService,
                        BotProperties botProperties) {
         this.postRepository = postRepository;
         this.postCategoryRepository = postCategoryRepository;
@@ -91,6 +94,7 @@ public class PostService {
         this.corridorRepository = corridorRepository;
         this.eventLogger = eventLogger;
         this.appProperties = appProperties;
+        this.settingsService = settingsService;
         this.botProperties = botProperties;
     }
 
@@ -204,7 +208,9 @@ public class PostService {
     private void enforceDailyLimit(User user) {
         Instant since = Instant.now().minus(1, ChronoUnit.DAYS);
         long used = postRepository.countByUser_IdAndCreatedAtAfterAndDeletedAtIsNull(user.getId(), since);
-        int limit = appProperties.rateLimitPostsPerDay();
+        // Chegara admin panelidan boshqariladi (§11.2).
+        int limit = settingsService.number(SettingKeys.RATE_LIMIT_POSTS_PER_DAY,
+                appProperties.rateLimitPostsPerDay());
         if (used >= limit) {
             log.warn("E'lon chegarasi: user_id={} used={} limit={}", user.getId(), used, limit);
             eventLogger.track(TrackedEvent.of(EventName.RATE_LIMIT_HIT, EventSource.MINIAPP)

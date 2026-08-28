@@ -45,6 +45,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- Admin API uchun JWT (4-bosqich, §11.1). Nimbus JOSE Spring Security
+             tarkibida keladi — o'z qo'limiz bilan kripto yozilmaydi. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.flywaydb</groupId>

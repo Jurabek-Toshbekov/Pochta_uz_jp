@@ -650,6 +650,7 @@ Bot **endi forma to'ldirmaydi**. Uning ishi: kutib olish, tushuntirish, yo'nalti
 | `/til` | uz-latn / uz-cyrl / ru |
 | `/yordam` | Ko'p so'raladigan savollar |
 | `/mening_malumotlarim` | Ma'lumot eksporti / o'chirish so'rovi |
+| `/admin` | Admin panelga kirish kodi. **Menyuda ko'rinmaydi**, faqat MODERATOR/ADMIN uchun ishlaydi (§11.1) |
 
 ### 8.2 `/start` matni (aynan shu ruh)
 
@@ -676,7 +677,8 @@ Batafsil: /xavfsizlik
 
 ### 8.3 Bot boshqa nimalar qiladi
 
-- **Xabarnoma yuborish.** Obuna bo'lgan foydalanuvchiga mos e'lon chiqsa xabar beradi (deep link bilan).
+- **Xabarnoma yuborish.** Obuna bo'lgan foydalanuvchiga mos e'lon chiqsa xabar beradi
+  (deep link bilan). Bir vaqtda bir nechta mos e'lon chiqsa — bitta xabarga birlashtiriladi.
 - **"Topildimi?" so'rovi.** Publish'dan 3 kun keyin.
 - **E'lon muddati tugashi haqida ogohlantirish.** 1 kun oldin.
 - **Kanal'ga publish qilish.** Post matnini shakllantirib yuboradi, `channel_message_id` ni saqlaydi.
@@ -798,14 +800,12 @@ Qorong'i temada `--paper` va `--ink` almashadi; `--indigo` `#5B7FD1` ga yorishad
 ### 9.5 Sifat minimumi
 
 - Mobil birinchi navbatda (360px dan boshlab)
+- Xavfsiz zona hisobga olingan — iPhone kesigi ostida matn qolmaydi (§9.6)
 - Klaviatura fokusi ko'rinadigan
 - Har bir input `aria-label` bilan
-- Xavfsiz zona hisobga olingan — iPhone kesigi ostida matn qolmaydi (§9.6)
 - Offline/xato holati — qayta urinish tugmasi bilan
 - Draft avtomatik saqlanadi, ilova yopilib ochilsa o'sha joydan davom etadi
 - Birinchi yuklanish < 200KB gzip
-
----
 
 ### 9.6 XAVFSIZ ZONA (safe area) — majburiy
 
@@ -846,6 +846,8 @@ Qorong'i temada `--paper` va `--ink` almashadi; `--indigo` `#5B7FD1` ga yorishad
 
 Amalga oshirilishi: `miniapp/src/lib/safeArea.ts` (+ testlari),
 `tokens.css` dagi `--safe-*` tokenlari, `global.css` dagi `.page`.
+
+---
 
 ## 10. QIDIRUV (2-bosqich)
 
@@ -962,8 +964,9 @@ DELETE /drafts                     draftni tashlash
 GET    /subscriptions
 POST   /subscriptions
 DELETE /subscriptions/{id}
-POST   /reports                    shikoyat
-POST   /reviews                    baho berish
+POST   /reports                    shikoyat (§7.3) — e'lonni yopmaydi, moderatsiyaga tushadi
+POST   /reviews                    baho berish (1..5) — faqat bitimda qatnashgan odam
+POST   /notifications/opened       xabarnoma havolasi ochildi (CTR uchun)
 POST   /events                     event batch (array)
 GET    /me                         profil
 PATCH  /me                         til, telefon
@@ -971,28 +974,51 @@ GET    /me/export                  ma'lumot eksporti (JSON)
 ```
 
 ### Admin (`/api/admin`, JWT auth)
+
+`/auth/**` dan tashqari hammasi `Authorization: Bearer <access>` talab qiladi.
+Rol har so'rovda bazadan qayta tekshiriladi — token 2 soat yashaydi, shuncha
+vaqtda huquq olib qo'yilishi mumkin.
+
 ```
-POST   /auth/telegram              login
+POST   /auth/telegram              bot bergan bir martalik kodni tokenga almashtiradi
+POST   /auth/refresh               access muddati tugaganda
+
 GET    /overview                   KPI to'plami
-GET    /posts                      filtrlangan ro'yxat
-POST   /posts/{id}/approve
-POST   /posts/{id}/reject
-PATCH  /posts/{id}
-GET    /users
-GET    /users/{id}
-POST   /users/{id}/block
-POST   /users/{id}/verify
-GET    /reports
-POST   /reports/{id}/resolve
+
+GET    /posts                      ?status=&type=&direction=&search=&page=&size=
+GET    /posts/{id}                 tafsilot (telefon maskalangan)
+POST   /posts/{id}/approve         tasdiqlash -> kanalga chiqadi
+POST   /posts/{id}/reject          sabab majburiy
+POST   /posts/{id}/close
+PATCH  /posts/{id}                 matn maydonlarini tahrirlash
+
+GET    /users                      ?search=&role=&status=&page=&size=
+GET    /users/{id}                 profil + event lentasi
+POST   /users/{id}/block           sabab majburiy
+POST   /users/{id}/unblock
+POST   /users/{id}/verify          NONE | PHONE | DOCUMENT
+
+GET    /reports                    ?status=&reason=&page=&size=
+POST   /reports/{id}/resolve       RESOLVED | DISMISSED + izoh
+
+GET    /analytics/posts-daily?from=&to=
 GET    /analytics/funnel?from=&to=
-GET    /analytics/cohorts
-GET    /analytics/price-index?route=&from=&to=
-GET    /analytics/supply-demand
-GET    /search-insights/zero-results
-GET    /notifications/stats
+GET    /analytics/abandon?from=&to=
+GET    /analytics/cohorts?from=&to=
+GET    /analytics/price-index?from=&to=&direction=
+GET    /analytics/supply-demand?from=&to=
+GET    /analytics/match-latency?from=&to=
+GET    /analytics/seasonality
+
+GET    /search-insights/zero-results?limit=
+GET    /search-insights/daily?from=&to=
+GET    /search-insights/demand-supply?from=&limit=
+
+GET    /notifications/stats?from=&to=
+
 GET    /settings
-PATCH  /settings
-GET    /audit
+PATCH  /settings/{key}             faqat ADMIN roli
+GET    /audit                      ?action=&actorId=&page=&size=
 ```
 
 ### Webhook
@@ -1054,23 +1080,25 @@ GET    /health
 - [x] Saqlangan qidiruv → obuna (xabarnoma yuborish — 5-bosqich)
 
 ### 4-bosqich — Analitika va admin dashboard
-- [ ] Metrikalar uchun SQL view'lar (`docs/METRICS.md`)
-- [ ] Kunlik agregatlar (`daily_metrics`) + scheduled job
-- [ ] Admin JWT auth + Telegram login
-- [ ] Admin React skeleton + layout + jadval komponenti
-- [ ] Overview, Posts (moderatsiya), Users, Reports sahifalari
-- [ ] Analytics: voronka, kogorta, narx indeksi, talab/taklif
-- [ ] Search Insights sahifasi
-- [ ] Settings (feature flag) + Audit log
+- [x] Metrikalar uchun SQL view'lar (`V5__admin_and_metrics.sql`, `docs/METRICS.md`)
+- [x] Kunlik agregatlar (`daily_metrics`) + scheduled job (`DailyMetricsJob`, 03:15 UTC)
+- [x] Admin JWT auth + Telegram login (bot `/admin` -> bir martalik kod)
+- [x] Admin React skeleton + layout + jadval komponenti
+- [x] Overview, Posts (moderatsiya), Users, Reports sahifalari
+- [x] Analytics: voronka, kogorta, narx indeksi, talab/taklif, match latency, mavsumiylik
+- [x] Search Insights sahifasi (natijasiz qidiruvlar + talab/taklif yonma-yon)
+- [x] Settings (feature flag) + Audit log
+- [x] `moderation.required` flag'i haqiqiy ta'sir qiladi: yoqilsa e'lon PENDING qoladi
 
 ### 5-bosqich — Xabarnoma va ishonch
-- [ ] `NotificationService` + mos e'lonni topish
-- [ ] Anti-spam (kuniga 5 ta, birlashtirish)
-- [ ] "Topildimi?" so'rovi (publish + 3 kun)
-- [ ] Muddat tugashi ogohlantirishi
-- [ ] Reytting va sharhlar
-- [ ] `trust_score` hisoblash
-- [ ] Shikoyat oqimi to'liq ishlaydi
+- [x] `NotificationService` + mos e'lonni topish (`SubscriptionMatcher` — sof funksiya)
+- [x] Anti-spam: kuniga 5 ta (sozlamadan), digest bilan birlashtirish, takrorlanmaslik
+- [x] "Topildimi?" so'rovi (publish + 3 kun) — 3 ta javob alohida saqlanadi
+- [x] Muddat tugashi ogohlantirishi (1 kun oldin)
+- [x] Reytting va sharhlar (bot tugmalari + Mini App API)
+- [x] `trust_score` hisoblash (`TrustScoreService`, formula §hujjatda ochiq)
+- [x] Shikoyat oqimi to'liq ishlaydi (Mini App dialogi -> moderatsiya navbati)
+- [x] Xabarnoma atributsiyasi: `startapp=nt_<postId>` -> `notification_opened` -> CTR
 
 ### 6-bosqich (keyinroq, moliyaviy model tasdiqlagandan keyin)
 - [ ] VIP e'lon (Telegram Stars)
@@ -1139,6 +1167,8 @@ Vazifa faqat quyidagilarning **hammasi** bajarilganda tugagan hisoblanadi:
 7. Log'da PII yo'q
 8. `docs/EVENTS.md` yoki `docs/METRICS.md` yangilangan (agar kerak bo'lsa)
 9. `.env.example` yangilangan (agar yangi o'zgaruvchi qo'shilgan bo'lsa)
+10. Yangi UI ekrani xavfsiz zonani hisobga oladi — `.page` ishlatilgan yoki
+    `--safe-*` tokenlari qo'llangan (§9.6)
 
 ---
 
@@ -1152,5 +1182,3 @@ Vazifa faqat quyidagilarning **hammasi** bajarilganda tugagan hisoblanadi:
 6. **Shubha bo'lsa** — §1 dagi Mutlaq qoidalarga qayt. Ular hamma narsadan ustun.
 7. **Bosqich tugagach** — §13 dagi katakchalarni belgila va qisqacha hisobot ber: nima qilindi, nima qoldi, keyingi qadam nima.
 ```
-10. Yangi UI ekrani xavfsiz zonani hisobga oladi — `.page` ishlatilgan yoki
-    `--safe-*` tokenlari qo'llangan (§9.6)

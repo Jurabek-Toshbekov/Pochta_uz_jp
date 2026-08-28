@@ -143,6 +143,14 @@ public class Post {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    /** "Odam topdingizmi?" savoliga tasdiq kelgan payt (§6.4, 1-band). */
+    @Column(name = "deal_confirmed_at")
+    private Instant dealConfirmedAt;
+
+    /** Kim bilan kelishilgani — kontaktni ochgan odam. Aniq bilinmasa {@code null}. */
+    @Column(name = "deal_counterpart_id")
+    private UUID dealCounterpartId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "closed_reason", length = 32)
     private ClosedReason closedReason;
@@ -418,6 +426,22 @@ public class Post {
 
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public Instant getDealConfirmedAt() {
+        return dealConfirmedAt;
+    }
+
+    public void setDealConfirmedAt(Instant dealConfirmedAt) {
+        this.dealConfirmedAt = dealConfirmedAt;
+    }
+
+    public UUID getDealCounterpartId() {
+        return dealCounterpartId;
+    }
+
+    public void setDealCounterpartId(UUID dealCounterpartId) {
+        this.dealCounterpartId = dealCounterpartId;
     }
 
     public ClosedReason getClosedReason() {

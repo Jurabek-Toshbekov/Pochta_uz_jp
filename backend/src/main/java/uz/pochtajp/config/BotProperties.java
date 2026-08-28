@@ -36,9 +36,21 @@ public record BotProperties(
         mode = mode == null ? BotMode.OFF : mode;
     }
 
-    /** Mini App'da e'lonni ochadigan deep link (§8.4). */
+    /** Mini App'da e'lonni ochadigan deep link (§8.4). Manba: kanal. */
     public String deepLinkForPost(Object postId) {
         return "https://t.me/" + username + "/app?startapp=ch_" + postId;
+    }
+
+    /**
+     * Xabarnomadagi havola (§10.3).
+     *
+     * <p>WebApp tugmasi emas, {@code t.me} havolasi: faqat shu ko'rinishda
+     * {@code startapp} parametri Mini App'ga yetib boradi va ochilish
+     * {@code notification_opened} sifatida yozila oladi. Atributsiyasiz
+     * havola CTR'ni o'lchab bo'lmas holga keltiradi.
+     */
+    public String notificationLinkForPost(Object postId) {
+        return "https://t.me/" + username + "/app?startapp=nt_" + postId;
     }
 
     /**

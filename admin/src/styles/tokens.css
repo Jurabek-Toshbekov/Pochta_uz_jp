@@ -1,0 +1,55 @@
+/* =====================================================================
+   Admin dizayn tokenlari — CLAUDE.md §11.3
+   "Boshqaruv minorasi": ko'p ma'lumot, kam bezak. Hech qanday gradient
+   va soya — faqat hairline chiziqlar.
+   Ranglar Mini App bilan bir xil (§9.4), lekin ishlatilishi boshqacha:
+   quyuq navigatsiya paneli + oq kontent maydoni.
+   ===================================================================== */
+
+:root {
+  --ink: #101a2b;
+  --indigo: #2c4a8c;
+  --hanko: #d2352c;
+  --mist: #7c8899;
+  --paper: #f2f4f7;
+  --line: #dce1e8;
+
+  --surface: #ffffff;
+  --surface-sunken: var(--paper);
+  --text: var(--ink);
+  --text-muted: var(--mist);
+  --text-inverse: #f2f4f7;
+
+  /* Navigatsiya paneli — quyuq (§11.3) */
+  --nav-bg: var(--ink);
+  --nav-text: #b9c3d1;
+  --nav-text-active: #ffffff;
+  --nav-line: #22304a;
+
+  /* Holat ranglari: faqat matn va nozik fon, to'ldirilgan tugma emas */
+  --ok-bg: #e8f2ec;
+  --ok-text: #1f6b43;
+  --warn-bg: #fdf2e3;
+  --warn-text: #8a5a12;
+  --danger-bg: #fbeaea;
+  --danger-text: var(--hanko);
+
+  --font-ui: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-2xl: 40px;
+
+  --nav-width: 232px;
+  --gutter: 24px;
+  --gap: 16px;
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  /* Jadval qatori 36px (§11.3) */
+  --row-height: 36px;
+}

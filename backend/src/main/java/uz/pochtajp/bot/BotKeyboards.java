@@ -25,6 +25,14 @@ public class BotKeyboards {
     public static final String CB_DATA_DELETE_CONFIRM = "data:delete:yes";
     public static final String CB_DATA_CANCEL = "data:cancel";
 
+    /** "Odam topdingizmi?" javoblari (§6.4, 1-band). */
+    public static final String CB_DEAL_FOUND = "deal:found:";
+    public static final String CB_DEAL_NOT_YET = "deal:wait:";
+    public static final String CB_DEAL_CANCELLED = "deal:cancel:";
+
+    /** Baho: {@code review:<postId>:<1..5>} (§6.4, 7-band). */
+    public static final String CB_REVIEW_PREFIX = "review:";
+
     private final BotProperties botProperties;
 
     public BotKeyboards(BotProperties botProperties) {
@@ -72,6 +80,43 @@ public class BotKeyboards {
         rows.add(new InlineKeyboardRow(callback(texts.btnDeleteData(), CB_DATA_DELETE_CONFIRM)));
         rows.add(new InlineKeyboardRow(callback(texts.btnCancel(), CB_DATA_CANCEL)));
         return new InlineKeyboardMarkup(rows);
+    }
+
+    /**
+     * "Odam topdingizmi?" so'rovi (§6.4, 1-band).
+     *
+     * <p>Uchta javob ataylab: "javob bo'lmadi" varianti mahsulot muammosini
+     * ko'rsatadi, "rejam o'zgardi" esa oddiy hayot. Ikkisini bir joyga
+     * qo'shib yuborish ma'lumotni yo'qotadi (§6.4, 3-band).
+     */
+    public InlineKeyboardMarkup dealAsk(BotTexts.Pack texts, java.util.UUID postId) {
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        rows.add(new InlineKeyboardRow(callback(texts.btnDealFound(), CB_DEAL_FOUND + postId)));
+        rows.add(new InlineKeyboardRow(callback(texts.btnDealNotYet(), CB_DEAL_NOT_YET + postId)));
+        rows.add(new InlineKeyboardRow(callback(texts.btnDealCancelled(), CB_DEAL_CANCELLED + postId)));
+        return new InlineKeyboardMarkup(rows);
+    }
+
+    /** 1..5 yulduz — bitta qatorda. */
+    public InlineKeyboardMarkup reviewStars(BotTexts.Pack texts, java.util.UUID postId) {
+        InlineKeyboardRow row = new InlineKeyboardRow();
+        for (int stars = 1; stars <= 5; stars++) {
+            row.add(callback(texts.btnReviewStar().formatted(stars),
+                    CB_REVIEW_PREFIX + postId + ":" + stars));
+        }
+        return new InlineKeyboardMarkup(List.of(row));
+    }
+
+    /**
+     * Xabarnomadagi havola: aynan shu e'lon ochiladi va ochilish yoziladi.
+     *
+     * <p>WebApp tugmasi emas, URL tugmasi — {@code startapp} parametri
+     * faqat {@code t.me} havolasi orqali Mini App'ga yetib boradi (§10.3).
+     */
+    public InlineKeyboardMarkup openPost(String label, java.util.UUID postId) {
+        InlineKeyboardButton button = new InlineKeyboardButton(label);
+        button.setUrl(botProperties.notificationLinkForPost(postId));
+        return new InlineKeyboardMarkup(List.of(new InlineKeyboardRow(button)));
     }
 
     private InlineKeyboardButton webApp(String label, String route) {

@@ -98,25 +98,43 @@ hisoblari shu jadvaldan o'qiladi.
 | `contact_reveal` | **SERVER** | `post_id`, `owner_id`, `channel` — bitim boshlangan payt |
 | `contact_click` | MINIAPP | `post_id`, `method` (`telegram` \| `phone`) |
 | `post_share` | MINIAPP | `post_id`, `target` |
-| `deal_confirmed` | **SERVER** | `post_id`, `counterpart_id` |
+| `deal_confirmed` | **SERVER** | `post_id`, `counterpart_id`, `hours_since_publish` |
+| `deal_followup_answer` | **SERVER** | `post_id`, `answer` (FOUND \| NOT_YET \| CANCELLED), `hours_since_publish` |
 | `review_left` | **SERVER** | `post_id`, `rating` |
+
+> **`deal_followup_answer` nima uchun alohida:** "hali javob yo'q" degan javob
+> e'lonni yopmaydi, lekin eng qimmatli signallardan biri — taklif yetishmayotganini
+> ko'rsatadi. Uni "yopildi" bilan qo'shib yuborish bu ma'lumotni yo'q qiladi.
 
 ## 5. Xabarnoma
 
 | Event | Manba | Properties |
 |---|---|---|
-| `notification_sent` | SYSTEM | `subscription_id`, `post_id` |
-| `notification_opened` | MINIAPP | `notification_id`, `post_id` |
-| `notification_converted` | **SERVER** | `notification_id`, `post_id` — ochib, kontakt ochgan |
+| `notification_sent` | SYSTEM | `kind`, `post_id`, `post_count` (digest uchun) |
+| `notification_opened` | MINIAPP | `post_id`, `kind` |
+| `notification_converted` | **SERVER** | `post_id` — ochib, kontakt ochgan (kelajakda) |
+
+> **Xabarnoma turi (`kind`):** `MATCH` (obunaga mos e'lon), `DEAL_ASK`
+> ("Odam topdingizmi?"), `EXPIRY_WARNING` (muddat), `REVIEW_ASK` (baho so'rovi).
+> `MATCH` turi navbatga yoziladi va digest bilan birlashtiriladi; qolganlari
+> darhol va bir martadan yuboriladi.
+>
+> **Ochilish qanday yoziladi:** xabarnomadagi tugma `t.me/<bot>/app?startapp=nt_<postId>`
+> havolasi. WebApp tugmasi `startapp` ni uzatmaydi — shuning uchun aynan URL tugmasi.
 
 ## 6. Xavfsizlik
 
 | Event | Manba | Properties |
 |---|---|---|
 | `report_submitted` | **SERVER** | `post_id`, `reason` |
-| `post_rejected` | ADMIN | `post_id`, `reason` |
-| `user_blocked` | ADMIN | `target_user_id`, `reason` |
+| `post_rejected` | ADMIN | `post_id`, `post_type` |
+| `user_blocked` | ADMIN | `target_user_id` |
 | `rate_limit_hit` | **SERVER** | `endpoint`, `limit`, `window_seconds` |
+
+> **Nima uchun `reason` bu yerda yo'q:** sabab matnini moderator qo'lda yozadi va
+> unda telefon yoki ism uchrab qolishi mumkin (§1.7). Shuning uchun erkin matn
+> faqat `moderation_actions` jadvalida saqlanadi, event'da esa ID va turlar
+> qoladi — metrikaga aynan shular kerak.
 
 ## Retention (§6.2)
 
@@ -139,4 +157,10 @@ hisoblari shu jadvaldan o'qiladi.
 | `search_open`, `search_filter_change`, `search_result_click` (klient) | ✅ `miniapp/src/pages/SearchPage.tsx`, `components/SearchFilters.tsx` |
 | `contact_reveal` (bitim boshlangan payt) | ✅ `PostDetailService` |
 | `post_detail_view`, `contact_click`, `post_share` | ✅ `miniapp/src/pages/PostDetailPage.tsx` |
-| `daily_metrics` agregati | ⏳ 4-bosqich |
+| `post_rejected`, `user_blocked` (moderatsiya) | ✅ `AdminPostService`, `AdminUserService` |
+| `report_submitted` (shikoyat) | ✅ `ReportService` |
+| `review_left` (baho) | ✅ `ReviewService` |
+| `deal_confirmed`, `deal_followup_answer` | ✅ `DealService` |
+| `notification_sent`, `notification_opened` | ✅ `NotificationService` |
+| `daily_metrics` agregati | ✅ `service/DailyMetricsJob.java` (har kecha 03:15 UTC) |
+| `notification_converted` | ⏳ kelajak: xabarnomadan kelib kontakt ochish |

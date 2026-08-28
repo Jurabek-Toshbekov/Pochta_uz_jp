@@ -14,6 +14,7 @@ import uz.pochtajp.analytics.EventName;
 import uz.pochtajp.analytics.TrackedEvent;
 import uz.pochtajp.common.exception.RateLimitException;
 import uz.pochtajp.config.AppProperties;
+import uz.pochtajp.config.SettingKeys;
 import uz.pochtajp.domain.enums.EventSource;
 
 /**
@@ -35,10 +36,14 @@ public class RateLimitService {
 
     private final Map<UUID, Window> windows = new ConcurrentHashMap<>();
     private final AppProperties appProperties;
+    private final SettingsService settingsService;
     private final EventLogger eventLogger;
 
-    public RateLimitService(AppProperties appProperties, EventLogger eventLogger) {
+    public RateLimitService(AppProperties appProperties,
+                            SettingsService settingsService,
+                            EventLogger eventLogger) {
         this.appProperties = appProperties;
+        this.settingsService = settingsService;
         this.eventLogger = eventLogger;
     }
 
@@ -51,7 +56,10 @@ public class RateLimitService {
         if (userId == null) {
             return;
         }
-        int limit = appProperties.rateLimitRequestsPerMinute();
+        // Chegara admin panelidan boshqariladi (§11.2); sozlama yo'q bo'lsa
+        // environment qiymati ishlatiladi.
+        int limit = settingsService.number(SettingKeys.RATE_LIMIT_REQUESTS_PER_MINUTE,
+                appProperties.rateLimitRequestsPerMinute());
         Instant now = Instant.now();
 
         Window window = windows.compute(userId, (key, existing) -> {

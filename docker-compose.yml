@@ -69,10 +69,18 @@ services:
     ports:
       - "${MINIAPP_PORT:-5173}:80"
 
-  # admin servisi 4-bosqichda qo'shiladi (§13):
-  # admin:
-  #   build: ./admin
-  #   ports: ["5174:80"]
+  admin:
+    build:
+      context: ./admin
+      args:
+        # Vite o'zgaruvchilari build vaqtida bundle'ga tushadi — sir yozilmaydi (§1.2).
+        VITE_API_BASE_URL: ${ADMIN_API_BASE_URL:-http://localhost:8080}
+    container_name: pochta-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${ADMIN_PORT:-5174}:80"
 
 volumes:
   pgdata:

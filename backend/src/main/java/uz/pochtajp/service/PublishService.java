@@ -36,17 +36,20 @@ public class PublishService {
     private final ChannelPostFormatter formatter;
     private final ChannelPublisher channelPublisher;
     private final EventLogger eventLogger;
+    private final NotificationService notificationService;
 
     public PublishService(PostRepository postRepository,
                           PostCategoryRepository postCategoryRepository,
                           ChannelPostFormatter formatter,
                           ChannelPublisher channelPublisher,
-                          EventLogger eventLogger) {
+                          EventLogger eventLogger,
+                          NotificationService notificationService) {
         this.postRepository = postRepository;
         this.postCategoryRepository = postCategoryRepository;
         this.formatter = formatter;
         this.channelPublisher = channelPublisher;
         this.eventLogger = eventLogger;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -88,6 +91,11 @@ public class PublishService {
                     .property("channel_message_id", messageId)
                     .property("total_time_ms", elapsed(formStartedAtMillis))
                     .build());
+
+            // Obuna bo'lganlarga xabar (§10.3). Alohida oqimda: xabarnoma
+            // qidirish publish javobini kechiktirmasligi kerak va uning
+            // xatosi e'lonni rollback qilmasligi shart.
+            notificationService.enqueueMatches(postId);
             return true;
 
         } catch (ChannelPublisher.ChannelPublishException ex) {

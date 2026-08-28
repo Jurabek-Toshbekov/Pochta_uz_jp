@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { EV } from './analytics/events';
 import { flushOnUnload, track } from './analytics/track';
+import { api } from './api/endpoints';
 import { ErrorState, Loader } from './components/primitives';
 import { useSession } from './hooks/useSession';
 import { startParam } from './hooks/useTelegram';
@@ -47,6 +48,12 @@ export function App() {
     if (param.startsWith('ch_')) {
       // Kanaldagi post havolasi — e'lon tafsiloti (§8.4).
       navigate(`/post/${param.slice(3)}`);
+    } else if (param.startsWith('nt_')) {
+      // Xabarnomadagi havola. Ochilishni serverga aytamiz — CTR shundan
+      // hisoblanadi (§10.3). Xato bo'lsa ham e'lon ochilaveradi.
+      const notifiedPostId = param.slice(3);
+      void api.notificationOpened(notifiedPostId).catch(() => undefined);
+      navigate(`/post/${notifiedPostId}`);
     } else if (param === 'search') {
       navigate('/search');
     } else if (param === 'new') {

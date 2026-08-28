@@ -268,3 +268,25 @@ export interface Subscription {
   categoryIds: number[];
   createdAt: string;
 }
+
+/** Shikoyat sabablari — backend `ReportReason` bilan bir xil. */
+export type ReportReason = 'SPAM' | 'SCAM' | 'PROHIBITED' | 'OFFENSIVE' | 'OTHER';
+
+export interface ReportInput {
+  postId: string;
+  reason: ReportReason;
+  details?: string;
+}
+
+export interface ReviewInput {
+  postId: string;
+  rating: number;
+  comment?: string;
+}
+
+/** Shikoyat va baho javobi. */
+export interface TrustResponse {
+  id: string | null;
+  trustScore: number | null;
+  message: string;
+}

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { EV } from '../analytics/events';
 import { track } from '../analytics/track';
 import { BoardingPassCard } from '../components/BoardingPassCard';
+import { ReportDialog } from '../components/ReportDialog';
 import {
   ErrorState,
   GhostButton,
@@ -35,6 +36,7 @@ export function PostDetailPage() {
   const reveal = useRevealContact(postId);
 
   const openedAt = useRef<number>(Date.now());
+  const [reporting, setReporting] = useState(false);
 
   useBackButton(useCallback(() => navigate(-1), [navigate]));
 
@@ -162,10 +164,12 @@ export function PostDetailPage() {
         />
       ) : null}
 
-      {/* Shikoyat oqimi 5-bosqichda ishga tushadi (§13). Tugma hozircha
-          ochiq aytadi — yashirilmaydi, chunki har bir e'londa bo'lishi
-          §7.3 talabi. */}
-      <GhostButton label={t.detail.report} onClick={() => window.alert(t.detail.reportSoon)} />
+      {/* Har bir e'londa shikoyat tugmasi bo'lishi §7.3 talabi. */}
+      {reporting ? (
+        <ReportDialog postId={post.id} onClose={() => setReporting(false)} />
+      ) : (
+        <GhostButton label={t.detail.report} onClick={() => setReporting(true)} />
+      )}
     </div>
   );
 }

@@ -13,8 +13,13 @@ import uz.pochtajp.analytics.EventName;
 import uz.pochtajp.analytics.TrackedEvent;
 import uz.pochtajp.common.TelegramHtml;
 import uz.pochtajp.common.exception.ForbiddenException;
+import uz.pochtajp.common.exception.ApiException;
+import uz.pochtajp.config.AppProperties;
 import uz.pochtajp.config.BotProperties;
 import uz.pochtajp.domain.enums.EventSource;
+import uz.pochtajp.service.AdminAuthService;
+import uz.pochtajp.service.DealService;
+import uz.pochtajp.service.ReviewService;
 import uz.pochtajp.service.UserDataService;
 import uz.pochtajp.service.UserService;
 
@@ -36,6 +41,10 @@ public class BotUpdateHandler {
     private final BotMessenger messenger;
     private final BotKeyboards keyboards;
     private final BotProperties botProperties;
+    private final AppProperties appProperties;
+    private final AdminAuthService adminAuthService;
+    private final DealService dealService;
+    private final ReviewService reviewService;
     private final EventLogger eventLogger;
 
     public BotUpdateHandler(UserService userService,
@@ -43,12 +52,20 @@ public class BotUpdateHandler {
                             BotMessenger messenger,
                             BotKeyboards keyboards,
                             BotProperties botProperties,
+                            AppProperties appProperties,
+                            AdminAuthService adminAuthService,
+                            DealService dealService,
+                            ReviewService reviewService,
                             EventLogger eventLogger) {
         this.userService = userService;
         this.userDataService = userDataService;
         this.messenger = messenger;
         this.keyboards = keyboards;
         this.botProperties = botProperties;
+        this.appProperties = appProperties;
+        this.adminAuthService = adminAuthService;
+        this.dealService = dealService;
+        this.reviewService = reviewService;
         this.eventLogger = eventLogger;
     }
 
@@ -124,6 +141,113 @@ public class BotUpdateHandler {
             case LANGUAGE -> messenger.sendHtml(chatId, texts.languageTitle(), keyboards.languageChoice());
             case HELP -> messenger.sendHtml(chatId, texts.help(), keyboards.mainMenu(texts));
             case MY_DATA -> messenger.sendHtml(chatId, texts.myData(), keyboards.myDataMenu(texts));
+            case ADMIN -> handleAdmin(chatId, user, texts);
+        }
+    }
+
+    /**
+     * Admin panelga kirish kodi (§11.1).
+     *
+     * <p>Kod faqat shaxsiy chatga boradi va log'ga yozilmaydi — u sir.
+     * Huquqsiz odamga muloyim rad javobi beriladi, buyruqning mavjudligi
+     * haqida ortiqcha ma'lumot berilmaydi.
+     */
+    /**
+     * "Odam topdingizmi?" javobi (§6.4, 1-band).
+     *
+     * <p>Callback data: {@code deal:<found|wait|cancel>:<postId>}.
+     * Tugma boshqa odamniki bo'lsa servis {@code ForbiddenException} beradi
+     * va foydalanuvchi muloyim javob oladi — bot jerkimaydi (§8.3).
+     */
+    private void handleDealAnswer(CallbackQuery callback, long chatId,
+                                  uz.pochtajp.domain.User user, BotTexts.Pack texts, String data) {
+        String[] parts = data.split(":", 3);
+        if (parts.length < 3) {
+            messenger.answerCallback(callback.getId(), "");
+            return;
+        }
+        java.util.UUID postId = parseUuid(parts[2]);
+        if (postId == null) {
+            messenger.answerCallback(callback.getId(), "");
+            return;
+        }
+
+        DealService.Answer answer = switch (parts[1]) {
+            case "found" -> DealService.Answer.FOUND;
+            case "wait" -> DealService.Answer.NOT_YET;
+            case "cancel" -> DealService.Answer.CANCELLED;
+            default -> null;
+        };
+        if (answer == null) {
+            messenger.answerCallback(callback.getId(), "");
+            return;
+        }
+
+        try {
+            boolean askReview = dealService.answer(postId, user.getId(), answer);
+            messenger.answerCallback(callback.getId(), "");
+            messenger.sendHtml(chatId, switch (answer) {
+                case FOUND -> texts.dealThanksFound();
+                case NOT_YET -> texts.dealThanksNotYet();
+                case CANCELLED -> texts.dealThanksCancelled();
+            }, null);
+
+            if (askReview) {
+                dealService.askForReview(postId);
+            }
+        } catch (ApiException ex) {
+            messenger.answerCallback(callback.getId(), "");
+            messenger.sendHtml(chatId, ex.getMessage(), null);
+        }
+    }
+
+    /** Baho: {@code review:<postId>:<1..5>} (§6.4, 7-band). */
+    private void handleReviewAnswer(CallbackQuery callback, long chatId,
+                                    uz.pochtajp.domain.User user, BotTexts.Pack texts, String data) {
+        String[] parts = data.split(":", 3);
+        if (parts.length < 3) {
+            messenger.answerCallback(callback.getId(), "");
+            return;
+        }
+        java.util.UUID postId = parseUuid(parts[1]);
+        int rating;
+        try {
+            rating = Integer.parseInt(parts[2]);
+        } catch (NumberFormatException ex) {
+            messenger.answerCallback(callback.getId(), "");
+            return;
+        }
+        if (postId == null) {
+            messenger.answerCallback(callback.getId(), "");
+            return;
+        }
+
+        try {
+            reviewService.leave(postId, user.getId(), rating, null, EventSource.BOT);
+            messenger.answerCallback(callback.getId(), "");
+            messenger.sendHtml(chatId, texts.reviewThanks(), null);
+        } catch (ApiException ex) {
+            messenger.answerCallback(callback.getId(), "");
+            messenger.sendHtml(chatId, ex.getMessage(), null);
+        }
+    }
+
+    private static java.util.UUID parseUuid(String raw) {
+        try {
+            return java.util.UUID.fromString(raw);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private void handleAdmin(long chatId, uz.pochtajp.domain.User user, BotTexts.Pack texts) {
+        String panelUrl = appProperties.adminUrl() == null || appProperties.adminUrl().isBlank()
+                ? "—" : appProperties.adminUrl();
+        try {
+            String code = adminAuthService.issueLoginCode(user.getId());
+            messenger.sendHtml(chatId, texts.adminCode().formatted(code, TelegramHtml.escape(panelUrl)), null);
+        } catch (ApiException ex) {
+            messenger.sendHtml(chatId, texts.adminNoAccess(), null);
         }
     }
 
@@ -186,6 +310,15 @@ public class BotUpdateHandler {
                     .build());
             messenger.answerCallback(callback.getId(), updated.languageChanged());
             messenger.sendHtml(chatId, updated.languageChanged(), keyboards.mainMenu(updated));
+            return;
+        }
+
+        if (data.startsWith("deal:")) {
+            handleDealAnswer(callback, chatId, user, texts, data);
+            return;
+        }
+        if (data.startsWith(BotKeyboards.CB_REVIEW_PREFIX)) {
+            handleReviewAnswer(callback, chatId, user, texts, data);
             return;
         }
 

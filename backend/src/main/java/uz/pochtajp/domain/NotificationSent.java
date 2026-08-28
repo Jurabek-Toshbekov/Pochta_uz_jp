@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import uz.pochtajp.domain.enums.NotificationKind;
 import uz.pochtajp.domain.enums.NotificationStatus;
 
 /**
@@ -41,6 +42,10 @@ public class NotificationSent {
     @Column(name = "status", nullable = false, length = 16)
     private NotificationStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kind", nullable = false, length = 24)
+    private NotificationKind kind = NotificationKind.MATCH;
+
     @Column(name = "opened_at")
     private Instant openedAt;
 
@@ -54,6 +59,14 @@ public class NotificationSent {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public NotificationKind getKind() {
+        return kind;
+    }
+
+    public void setKind(NotificationKind kind) {
+        this.kind = kind;
     }
 
     public UUID getSubscriptionId() {

@@ -8,9 +8,9 @@ Uni o'qimasdan kod yozilmaydi.
 
 | Qism | Papka | Holat |
 |---|---|---|
-| Backend + bot (Spring Boot 3.3, Java 17) | `backend/` | 0–3-bosqich tugadi |
-| Mini App (React + Vite + TS) | `miniapp/` | 1- va 3-bosqich tugadi |
-| Admin dashboard (React + Vite + TS) | `admin/` | 4-bosqich |
+| Backend + bot (Spring Boot 3.3, Java 17) | `backend/` | 0–5-bosqich tugadi |
+| Mini App (React + Vite + TS) | `miniapp/` | 1-, 3- va 5-bosqich tugadi |
+| Admin dashboard (React + Vite + TS) | `admin/` | 4-bosqich tugadi |
 | Hujjatlar | `docs/` | [EVENTS.md](docs/EVENTS.md), [METRICS.md](docs/METRICS.md) |
 
 ---
@@ -193,7 +193,119 @@ kesh'langan commit'larni tozalashni so'rash kerak.
 
 ---
 
-## 5. Bot
+## 5. Admin dashboard
+
+Boshqaruv paneli `admin/` papkasida (React + Vite + TS, Recharts).
+
+```bash
+cd admin
+npm install
+npm run dev          # http://localhost:5174
+```
+
+Dev serverda `/api` so'rovlari Vite proxy orqali backendga uzatiladi — CORS
+sozlash shart emas.
+
+### Kirish
+
+Parol yo'q. Telegram bot orqali (§11.1):
+
+1. `.env` da `ADMIN_JWT_SECRET` to'ldirilgan bo'lsin. **Bo'sh bo'lsa admin API
+   butunlay yopiq turadi** — bu ataylab.
+2. `ADMIN_TELEGRAM_IDS` ga o'z `telegram_id` ingizni yozing. Bu ro'yxatdagilar
+   birinchi kirishda avtomatik `ADMIN` rolini oladi.
+3. Botga `/admin` deb yozing — u 8 belgili kod yuboradi.
+4. Kodni panelga kiriting. Kod 5 daqiqa yashaydi va bir marta ishlaydi.
+
+Kod bazada ochiq matnda saqlanmaydi — faqat SHA-256. Access token 2 soat,
+refresh 14 kun. Rol **har bir so'rovda** bazadan qayta tekshiriladi: huquq
+olib qo'yilsa token darhol ishlamay qoladi.
+
+### Sahifalar
+
+| Sahifa | Nima uchun |
+|---|---|
+| Umumiy ko'rinish | KPI kartalari, 30 kunlik e'lonlar, voronka |
+| Moderatsiya | `PENDING` va yuqori riskli e'lonlar tepada; tasdiqlash / rad etish / yopish |
+| Foydalanuvchilar | Profil, e'lonlar, event lentasi; bloklash va tasdiqlash |
+| Shikoyatlar | Ochiq murojaatlar navbati |
+| Analitika | Narx indeksi, talab/taklif, kogorta, match latency, mavsumiylik |
+| Qidiruv tahlili | Natijasiz qidiruvlar va talab/taklif yonma-yon — eng qimmatli sahifa |
+| Xabarnomalar | CTR va obunalar (yuborish 5-bosqichda) |
+| Sozlamalar | Feature flag'lar. O'zgartirish faqat `ADMIN` roli uchun |
+| Audit | Kim, nima qildi, qachon. Faqat o'qish |
+
+### Feature flag'lar
+
+`app_settings` jadvalida, panel orqali boshqariladi:
+
+| Kalit | Ta'siri |
+|---|---|
+| `moderation.required` | Yoqilsa e'lon kanalga chiqmaydi, `PENDING` holatida admin tasdiqlashini kutadi |
+| `vip.enabled` | 6-bosqich uchun tayyorlangan |
+| `rate_limit.posts_per_day` | Kuniga e'lon chegarasi (env qiymatidan ustun) |
+| `rate_limit.requests_per_minute` | API so'rovlari chegarasi |
+| `notifications.max_per_day` | Anti-spam chegarasi (5-bosqich) |
+
+### Kunlik agregatlar
+
+`DailyMetricsJob` har kecha **03:15 UTC** da o'tgan kun metrikalarini
+`daily_metrics` jadvaliga yozadi. Job idempotent — orqaga qarab to'ldirish
+uchun ham shu metod ishlatiladi. Batafsil: [`docs/METRICS.md`](docs/METRICS.md).
+
+
+## 6. Xabarnoma va ishonch
+
+### Xabarnomalar
+
+E'lon kanalga chiqqanda obunalar tekshiriladi va mos kelganlar **navbatga**
+yoziladi. Har 2 daqiqada digest job navbatni foydalanuvchi kesimida guruhlab
+yuboradi — bir vaqtda 5 ta e'lon chiqsa, odam 5 ta emas, **bitta** xabar oladi.
+
+Uchta anti-spam chegarasi (§10.3):
+
+| Chegara | Qanday ishlaydi |
+|---|---|
+| Takrorlanmaslik | `(post_id, user_id, kind)` unikal indeks — job qayta ishlasa ham ikkinchi xabar ketmaydi |
+| Kunlik chegara | `notifications.max_per_day` (standart 5). Oshsa yozuv `BLOCKED` bo'ladi, o'chirilmaydi |
+| Birlashtirish | Bir yuborishda bitta xabar, nechta e'lon bo'lsa ham |
+
+Xabarnomadagi tugma `t.me/<bot>/app?startapp=nt_<postId>` havolasi — WebApp
+tugmasi `startapp` ni uzatmaydi, shuning uchun aynan URL tugmasi. Ochilish
+`notification_opened` sifatida yoziladi va CTR shundan hisoblanadi.
+
+### Kunlik eslatmalar (`PostFollowUpJob`, 09:00 UTC)
+
+- **"Odam topdingizmi?"** — publish'dan 3 kun keyin. Uchta javob:
+  `Odam topildi` (e'lon yopiladi, bitim yoziladi), `Hali javob yo'q` (e'lon
+  ochiq qoladi, javob event sifatida yoziladi), `Rejam o'zgardi` (yopiladi).
+  Uchalasi alohida saqlanadi — ularni bitta "yopildi" ga qo'shish ma'lumotni yo'qotadi.
+- **Muddat ogohlantirishi** — tugashiga 1 kun qolganda.
+
+### Reytting va ishonch balli
+
+Baho faqat bitimda qatnashgan odamdan qabul qilinadi: e'lon egasi sherigini,
+kontakt ochgan odam e'lon egasini. Boshqa hech kim — aks holda reytting
+soxtalashtirish quroliga aylanadi.
+
+`trust_score` (0..100) to'rtta manbadan yig'iladi:
+
+```
+10 bazaviy + baho×10 (maks 50) + yakunlangan bitim×5 (maks 20)
++ tasdiqlanish (PHONE 10 / DOCUMENT 20) − ASOSLI shikoyat×10 (maks 40)
+```
+
+Faqat **hal qilingan** shikoyat ballni tushiradi: ochiq shikoyat hali
+tekshirilmagan va u bilan jazolash raqobatchiga qurol berish bo'lardi.
+
+### Shikoyat
+
+Har bir e'londa "⚠️ Shikoyat qilish" tugmasi (§7.3). Shikoyat e'lonni
+**yopmaydi** — u moderatsiya navbatiga tushadi va qarorni admin qabul qiladi.
+Bitta odam bitta e'longa bir marta shikoyat qila oladi.
+
+
+## 7. Bot
 
 Bot **forma to'ldirmaydi**. Uning ishi: kutib olish, tushuntirish, Mini App'ga
 yo'naltirish, xabar berish (§8).
@@ -204,12 +316,13 @@ yo'naltirish, xabar berish (§8).
 | `/elon` | Mini App'ni e'lon berish ekranida ochadi |
 | `/qidiruv` | Mini App qidiruv ekrani |
 | `/mening_elonlarim` | Mini App "Mening e'lonlarim" |
-| `/obuna` | Xabarnoma obunalari (5-bosqichda ishga tushadi) |
+| `/obuna` | Xabarnoma obunalari |
 | `/xavfsizlik` | Taqiqlangan buyumlar va xavfsizlik qoidalari |
 | `/qoidalar` | Qoidalar va foydalanish shartlari |
 | `/til` | uz-latn / uz-cyrl / ru |
 | `/yordam` | Ko'p so'raladigan savollar |
 | `/mening_malumotlarim` | Ma'lumot eksporti (JSON) va o'chirish |
+| `/admin` | Admin panelga kirish kodi. Menyuda ko'rinmaydi, faqat MODERATOR/ADMIN uchun |
 
 ### Rejimlar
 
@@ -234,7 +347,7 @@ etadi, xato log'da qoladi.
 - event'lar va analitika joyida qoladi — ularda PII yo'q (§1.7)
 - `audit_log`ga yozib qo'yiladi
 
-## 6. API
+## 8. API
 
 To'liq ro'yxat — `CLAUDE.md` §12. Hozir mavjud:
 
@@ -260,7 +373,7 @@ beriladi. `totalCount` faqat birinchi sahifada keladi.
 Mini App'ning **har bir** so'rovi `initData` HMAC imzosi bilan tekshiriladi (§7.1).
 `user_id` request body'dan olinmaydi — faqat imzolangan `initData`dan.
 
-## 7. Konvensiyalar
+## 9. Konvensiyalar
 
 - Kod English, izohlar va UI matnlari o'zbekcha.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`.

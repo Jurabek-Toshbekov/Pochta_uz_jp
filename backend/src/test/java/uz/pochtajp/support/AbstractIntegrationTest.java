@@ -68,6 +68,9 @@ public abstract class AbstractIntegrationTest {
         registry.add("bot.init-data-max-age-seconds", () -> 86_400);
         registry.add("app.rate-limit-requests-per-minute", () -> 60);
         registry.add("app.admin-telegram-ids", () -> "");
+        // 4-bosqich: admin JWT. Test uchun qat'iy soxta sir (§1.2).
+        registry.add("app.admin-jwt-secret", () -> "test-only-admin-secret-do-not-use");
+        registry.add("app.admin-url", () -> "https://admin.example.test");
         registry.add("bot.channel-chat-id", () -> "-1001111111111");
         registry.add("bot.channel-username", () -> "jpuzbpochta_test");
         registry.add("bot.miniapp-url", () -> "https://app.example.test");
@@ -90,7 +93,27 @@ public abstract class AbstractIntegrationTest {
         jdbcTemplate.execute("""
                 TRUNCATE TABLE events, search_queries, contact_reveals, notifications_sent,
                     notification_subscriptions, moderation_actions, reports, reviews,
-                    post_categories, post_drafts, posts, audit_log, users RESTART IDENTITY CASCADE
+                    post_categories, post_drafts, posts, audit_log, admin_login_codes,
+                    daily_metrics, users RESTART IDENTITY CASCADE
+                """);
+        reseedSettings();
+    }
+
+    /**
+     * {@code app_settings} da {@code users} ga FK bor, shuning uchun
+     * {@code TRUNCATE ... CASCADE} uni ham tozalab yuboradi. Seed qiymatlarni
+     * qaytaramiz — aks holda birinchi testdan keyin sozlamalar yo'qoladi.
+     */
+    private void reseedSettings() {
+        jdbcTemplate.execute("""
+                INSERT INTO app_settings (setting_key, value_json, value_type, title_uz, description_uz)
+                VALUES
+                    ('moderation.required', 'false'::jsonb, 'BOOLEAN', 'Moderatsiya majburiy', NULL),
+                    ('vip.enabled', 'false'::jsonb, 'BOOLEAN', 'VIP e''lon yoqilgan', NULL),
+                    ('rate_limit.posts_per_day', '5'::jsonb, 'NUMBER', 'Kuniga e''lon chegarasi', NULL),
+                    ('rate_limit.requests_per_minute', '60'::jsonb, 'NUMBER', 'Daqiqada so''rov chegarasi', NULL),
+                    ('notifications.max_per_day', '5'::jsonb, 'NUMBER', 'Kuniga xabarnoma chegarasi', NULL)
+                ON CONFLICT (setting_key) DO NOTHING
                 """);
     }
 

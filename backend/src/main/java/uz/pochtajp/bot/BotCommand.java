@@ -18,14 +18,32 @@ public enum BotCommand {
     RULES("/qoidalar", "Qoidalar"),
     LANGUAGE("/til", "Til"),
     HELP("/yordam", "Yordam"),
-    MY_DATA("/mening_malumotlarim", "Mening ma'lumotlarim");
+    MY_DATA("/mening_malumotlarim", "Mening ma'lumotlarim"),
+
+    /**
+     * Admin panelga kirish kodi (§11.1). Ommaviy menyuda ko'rinmaydi —
+     * oddiy foydalanuvchiga bu buyruq haqida bilish shart emas va u
+     * baribir huquqsiz ishlamaydi.
+     */
+    ADMIN("/admin", "Admin panel", false);
 
     private final String command;
     private final String description;
+    private final boolean inMenu;
 
     BotCommand(String command, String description) {
+        this(command, description, true);
+    }
+
+    BotCommand(String command, String description, boolean inMenu) {
         this.command = command;
         this.description = description;
+        this.inMenu = inMenu;
+    }
+
+    /** Telegram buyruqlar menyusida ko'rinadimi. */
+    public boolean inMenu() {
+        return inMenu;
     }
 
     public String command() {

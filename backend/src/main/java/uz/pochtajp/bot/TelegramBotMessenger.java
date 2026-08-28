@@ -35,7 +35,7 @@ public class TelegramBotMessenger implements BotMessenger {
     }
 
     @Override
-    public void sendHtml(long chatId, String text, InlineKeyboardMarkup keyboard) {
+    public boolean sendHtml(long chatId, String text, InlineKeyboardMarkup keyboard) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
@@ -45,8 +45,10 @@ public class TelegramBotMessenger implements BotMessenger {
                 .build();
         try {
             telegramClient.execute(message);
+            return true;
         } catch (TelegramApiException ex) {
             log.warn("Xabar yuborilmadi: chat_id={} sabab={}", chatId, ex.getMessage());
+            return false;
         }
     }
 
@@ -80,6 +82,7 @@ public class TelegramBotMessenger implements BotMessenger {
     @Override
     public void publishCommandMenu() {
         var commands = Arrays.stream(BotCommand.values())
+                .filter(BotCommand::inMenu)
                 .map(command -> new org.telegram.telegrambots.meta.api.objects.commands.BotCommand(
                         command.slug(), command.description()))
                 .toList();

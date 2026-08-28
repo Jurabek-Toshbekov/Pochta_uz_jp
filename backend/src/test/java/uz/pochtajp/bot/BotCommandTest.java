@@ -15,7 +15,16 @@ class BotCommandTest {
         assertThat(Arrays.stream(BotCommand.values()).map(BotCommand::command))
                 .containsExactlyInAnyOrder(
                         "/start", "/elon", "/qidiruv", "/mening_elonlarim", "/obuna",
-                        "/xavfsizlik", "/qoidalar", "/til", "/yordam", "/mening_malumotlarim");
+                        "/xavfsizlik", "/qoidalar", "/til", "/yordam", "/mening_malumotlarim",
+                        "/admin");
+    }
+
+    @Test
+    @DisplayName("/admin ommaviy menyuda ko'rinmaydi (§11.1)")
+    void adminCommandIsHiddenFromMenu() {
+        assertThat(BotCommand.ADMIN.inMenu()).isFalse();
+        assertThat(Arrays.stream(BotCommand.values()).filter(BotCommand::inMenu))
+                .hasSize(BotCommand.values().length - 1);
     }
 
     @Test

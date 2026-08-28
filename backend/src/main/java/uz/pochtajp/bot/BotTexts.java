@@ -48,7 +48,24 @@ public final class BotTexts {
             String unknownCommand,
             String blocked,
             String miniappNotConfigured,
-            String genericError
+            String genericError,
+            String adminCode,
+            String adminNoAccess,
+            String notifyMatchOne,
+            String notifyMatchMany,
+            String btnOpenPost,
+            String btnOpenSearch,
+            String notifyExpiry,
+            String dealAsk,
+            String btnDealFound,
+            String btnDealNotYet,
+            String btnDealCancelled,
+            String dealThanksFound,
+            String dealThanksNotYet,
+            String dealThanksCancelled,
+            String reviewAsk,
+            String btnReviewStar,
+            String reviewThanks
     ) {
     }
 
@@ -169,7 +186,52 @@ public final class BotTexts {
             "Bunday buyruq yo'q. Buyruqlar ro'yxati: /yordam",
             "Hisobingiz bloklangan. Sabab bo'yicha /qoidalar bilan tanishib chiqing.",
             "Ilova hozir sozlanmoqda. Birozdan keyin qayta urinib ko'ring.",
-            "Xatolik yuz berdi. Birozdan keyin qayta urinib ko'ring."
+            "Xatolik yuz berdi. Birozdan keyin qayta urinib ko'ring.",
+            """
+            🔐 <b>Admin panelga kirish</b>
+
+            Kod: <code>%s</code>
+
+            Kod 5 daqiqa amal qiladi va faqat bir marta ishlaydi.
+            Uni hech kimga bermang.
+
+            Panel: %s""",
+            "Sizda admin paneliga kirish huquqi yo'q.",
+            """
+            🔔 <b>Sizga mos yangi e'lon</b>
+
+            %s""",
+            """
+            🔔 <b>Sizga mos %d ta yangi e'lon bor</b>
+
+            %s""",
+            "👁 E'lonni ko'rish",
+            "🔍 Qidiruvda ko'rish",
+            """
+            ⏳ <b>E'lon muddati tugayapti</b>
+
+            %s
+
+            Ertaga e'lon qidiruvdan chiqadi. Hali kerak bo'lsa yangisini bering.""",
+            """
+            <b>Odam topdingizmi?</b>
+
+            %s
+
+            Javobingiz keyingi odamlarga yordam beradi.""",
+            "✅ Odam topildi",
+            "⏳ Hali javob yo'q",
+            "🚫 Rejam o'zgardi",
+            "Ajoyib. E'lon yopildi — boshqalar bekorga yozmaydi.",
+            "Tushunarli. E'lon ochiq qoldi, yana kutamiz.",
+            "E'lon yopildi. Rejalar o'zgaradi, bu normal.",
+            """
+            <b>Bahoyingizni qoldiring</b>
+
+            Sherigingiz bilan ish qanday ketdi? Baho boshqalarga
+            ishonchli odamni topishda yordam beradi.""",
+            "%d ⭐",
+            "Rahmat, bahoyingiz yozildi."
     );
 
     private static final Pack UZ_CYRL = new Pack(
@@ -289,7 +351,52 @@ public final class BotTexts {
             "Бундай буйруқ йўқ. Буйруқлар рўйхати: /yordam",
             "Ҳисобингиз блокланган. Сабаб бўйича /qoidalar билан танишиб чиқинг.",
             "Илова ҳозир созланмоқда. Бироздан кейин қайта уриниб кўринг.",
-            "Хатолик юз берди. Бироздан кейин қайта уриниб кўринг."
+            "Хатолик юз берди. Бироздан кейин қайта уриниб кўринг.",
+            """
+            🔐 <b>Админ панелга кириш</b>
+
+            Код: <code>%s</code>
+
+            Код 5 дақиқа амал қилади ва фақат бир марта ишлайди.
+            Уни ҳеч кимга берманг.
+
+            Панел: %s""",
+            "Сизда админ панелига кириш ҳуқуқи йўқ.",
+            """
+            🔔 <b>Сизга мос янги эълон</b>
+
+            %s""",
+            """
+            🔔 <b>Сизга мос %d та янги эълон бор</b>
+
+            %s""",
+            "👁 Эълонни кўриш",
+            "🔍 Қидирувда кўриш",
+            """
+            ⏳ <b>Эълон муддати тугаяпти</b>
+
+            %s
+
+            Эртага эълон қидирувдан чиқади. Ҳали керак бўлса янгисини беринг.""",
+            """
+            <b>Одам топдингизми?</b>
+
+            %s
+
+            Жавобингиз кейинги одамларга ёрдам беради.""",
+            "✅ Одам топилди",
+            "⏳ Ҳали жавоб йўқ",
+            "🚫 Режам ўзгарди",
+            "Ажойиб. Эълон ёпилди — бошқалар бекорга ёзмайди.",
+            "Тушунарли. Эълон очиқ қолди, яна кутамиз.",
+            "Эълон ёпилди. Режалар ўзгаради, бу нормал.",
+            """
+            <b>Баҳоингизни қолдиринг</b>
+
+            Шеригингиз билан иш қандай кетди? Баҳо бошқаларга
+            ишончли одамни топишда ёрдам беради.""",
+            "%d ⭐",
+            "Раҳмат, баҳоингиз ёзилди."
     );
 
     private static final Pack RU = new Pack(
@@ -406,7 +513,52 @@ public final class BotTexts {
             "Такой команды нет. Список команд: /yordam",
             "Ваш аккаунт заблокирован. Ознакомьтесь с /qoidalar.",
             "Приложение сейчас настраивается. Попробуйте немного позже.",
-            "Произошла ошибка. Попробуйте немного позже."
+            "Произошла ошибка. Попробуйте немного позже.",
+            """
+            🔐 <b>Вход в админ-панель</b>
+
+            Код: <code>%s</code>
+
+            Код действует 5 минут и срабатывает только один раз.
+            Никому его не передавайте.
+
+            Панель: %s""",
+            "У вас нет доступа к админ-панели.",
+            """
+            🔔 <b>Новое объявление по вашей подписке</b>
+
+            %s""",
+            """
+            🔔 <b>По вашей подписке: %d новых объявлений</b>
+
+            %s""",
+            "👁 Открыть объявление",
+            "🔍 Открыть поиск",
+            """
+            ⏳ <b>Срок объявления заканчивается</b>
+
+            %s
+
+            Завтра объявление уйдёт из поиска. Если всё ещё актуально — разместите новое.""",
+            """
+            <b>Нашли человека?</b>
+
+            %s
+
+            Ваш ответ поможет следующим.""",
+            "✅ Человек найден",
+            "⏳ Пока нет ответа",
+            "🚫 Планы изменились",
+            "Отлично. Объявление закрыто — другие не будут писать напрасно.",
+            "Понятно. Объявление осталось открытым, ждём дальше.",
+            "Объявление закрыто. Планы меняются, это нормально.",
+            """
+            <b>Оставьте оценку</b>
+
+            Как прошло дело с вашим партнёром? Оценка помогает другим
+            находить надёжных людей.""",
+            "%d ⭐",
+            "Спасибо, оценка сохранена."
     );
 
     private static final Map<String, Pack> PACKS = Map.of(

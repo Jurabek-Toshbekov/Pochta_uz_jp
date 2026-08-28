@@ -15,6 +15,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import uz.pochtajp.repository.UserRepository;
+import uz.pochtajp.security.AdminJwtAuthFilter;
+import uz.pochtajp.security.AdminJwtService;
 import uz.pochtajp.security.TelegramInitDataAuthFilter;
 import uz.pochtajp.security.TelegramInitDataValidator;
 import uz.pochtajp.service.UserService;
@@ -25,7 +28,8 @@ import uz.pochtajp.service.UserService;
  * <ul>
  *   <li>{@code /health} — yagona ochiq endpoint (§1.4)</li>
  *   <li>{@code /api/miniapp/**} — {@code initData} filtri majburiy</li>
- *   <li>{@code /api/admin/**} — JWT (4-bosqichda ulanadi), hozircha yopiq</li>
+ *   <li>{@code /api/admin/auth/**} — ochiq: bu yerda token hali yo'q (§11.1)</li>
+ *   <li>{@code /api/admin/**} — admin JWT filtri majburiy, rol har so'rovda bazadan tekshiriladi</li>
  *   <li>CORS — faqat {@code MINIAPP_URL} va admin domeni (§7.2)</li>
  *   <li>Sessiya yo'q — har bir so'rov o'zini o'zi autentifikatsiya qiladi</li>
  * </ul>
@@ -35,15 +39,19 @@ import uz.pochtajp.service.UserService;
 public class SecurityConfig {
 
     private final TelegramInitDataAuthFilter initDataAuthFilter;
+    private final AdminJwtAuthFilter adminJwtAuthFilter;
     private final BotProperties botProperties;
     private final AppProperties appProperties;
 
     public SecurityConfig(TelegramInitDataValidator validator,
                           UserService userService,
+                          UserRepository userRepository,
+                          AdminJwtService adminJwtService,
                           ObjectMapper objectMapper,
                           BotProperties botProperties,
                           AppProperties appProperties) {
         this.initDataAuthFilter = new TelegramInitDataAuthFilter(validator, userService, objectMapper);
+        this.adminJwtAuthFilter = new AdminJwtAuthFilter(adminJwtService, userRepository, objectMapper);
         this.botProperties = botProperties;
         this.appProperties = appProperties;
     }
@@ -63,9 +71,13 @@ public class SecurityConfig {
                         // Webhook o'z sirini o'zi tekshiradi (§7.2) — 2-bosqichda qo'shiladi.
                         .requestMatchers("/webhook/telegram/**").permitAll()
                         .requestMatchers("/api/miniapp/**").hasRole("MINIAPP_USER")
+                        // Kirish oqimi: kod almashtirish va token yangilash (§11.1).
+                        // Filtr bu yerga tushmaydi — token hali yo'q.
+                        .requestMatchers("/api/admin/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAnyRole("MODERATOR", "ADMIN")
                         .anyRequest().denyAll())
-                .addFilterBefore(initDataAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(initDataAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(adminJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

@@ -39,6 +39,18 @@ public class StubBotMessenger implements BotMessenger {
                     .toList();
         }
 
+        /** URL tugmalari (xabarnomadagi `t.me` havolalari). */
+        public List<String> buttonUrls() {
+            if (keyboard == null) {
+                return List.of();
+            }
+            return keyboard.getKeyboard().stream()
+                    .flatMap(List::stream)
+                    .map(InlineKeyboardButton::getUrl)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+        }
+
         public List<String> callbackData() {
             if (keyboard == null) {
                 return List.of();
@@ -58,10 +70,20 @@ public class StubBotMessenger implements BotMessenger {
     private final List<SentDocument> documents = new CopyOnWriteArrayList<>();
     private final List<String> answeredCallbacks = new CopyOnWriteArrayList<>();
     private volatile int commandMenuPublishes = 0;
+    private volatile boolean failNextSend = false;
 
     @Override
-    public void sendHtml(long chatId, String text, InlineKeyboardMarkup keyboard) {
+    public boolean sendHtml(long chatId, String text, InlineKeyboardMarkup keyboard) {
+        if (failNextSend) {
+            return false;
+        }
         messages.add(new SentMessage(chatId, text, keyboard));
+        return true;
+    }
+
+    /** Odam botni bloklagan holatni sinash uchun. */
+    public void failSends() {
+        failNextSend = true;
     }
 
     @Override
@@ -104,6 +126,7 @@ public class StubBotMessenger implements BotMessenger {
         documents.clear();
         answeredCallbacks.clear();
         commandMenuPublishes = 0;
+        failNextSend = false;
     }
 
     @TestConfiguration

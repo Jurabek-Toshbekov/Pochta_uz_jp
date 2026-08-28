@@ -34,4 +34,50 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Modifying
     @Query("UPDATE Post p SET p.contactRevealCount = p.contactRevealCount + 1 WHERE p.id = :id")
     void incrementContactRevealCount(@Param("id") UUID id);
+
+    /**
+     * "Odam topdingizmi?" so'rovi uchun nomzodlar (§6.4, 1-band).
+     *
+     * <p>Publish bo'lganiga kamida N kun bo'lgan, hali yopilmagan va bitim
+     * tasdiqlanmagan e'lonlar. Takroriy so'rov {@code notifications_sent}
+     * dagi unikal indeks bilan to'siladi, shu sabab bu yerda tekshirilmaydi.
+     */
+    @Query("""
+            SELECT p FROM Post p
+            WHERE p.deletedAt IS NULL
+              AND p.status = uz.pochtajp.domain.enums.PostStatus.PUBLISHED
+              AND p.dealConfirmedAt IS NULL
+              AND p.publishedAt IS NOT NULL
+              AND p.publishedAt < :before
+            ORDER BY p.publishedAt ASC
+            """)
+    List<Post> findDealFollowUpCandidates(@Param("before") Instant before,
+                                          org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Muddati tugashiga oz qolgan e'lonlar (§8.3).
+     *
+     * <p>Oraliq ataylab: allaqachon o'tib ketganlar ogohlantirilmaydi,
+     * juda uzoqdagilar esa hali erta.
+     */
+    @Query("""
+            SELECT p FROM Post p
+            WHERE p.deletedAt IS NULL
+              AND p.status = uz.pochtajp.domain.enums.PostStatus.PUBLISHED
+              AND p.expiresAt IS NOT NULL
+              AND p.expiresAt BETWEEN :from AND :to
+            ORDER BY p.expiresAt ASC
+            """)
+    List<Post> findExpiringSoon(@Param("from") Instant from,
+                                @Param("to") Instant to,
+                                org.springframework.data.domain.Pageable pageable);
+
+    /** Ishonch balli uchun: muvaffaqiyatli yakunlangan e'lonlar soni. */
+    @Query("""
+            SELECT count(p) FROM Post p
+            WHERE p.deletedAt IS NULL
+              AND p.user.id = :userId
+              AND p.dealConfirmedAt IS NOT NULL
+            """)
+    long countConfirmedDeals(@Param("userId") UUID userId);
 }

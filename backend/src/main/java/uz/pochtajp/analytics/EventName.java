@@ -52,6 +52,8 @@ public final class EventName {
     public static final String CONTACT_CLICK = "contact_click";
     public static final String POST_SHARE = "post_share";
     public static final String DEAL_CONFIRMED = "deal_confirmed";
+    /** "Odam topdingizmi?" savoliga javob — "hali yo'q" ham qimmatli signal. */
+    public static final String DEAL_FOLLOWUP_ANSWER = "deal_followup_answer";
     public static final String REVIEW_LEFT = "review_left";
 
     // --- Xabarnoma ---
