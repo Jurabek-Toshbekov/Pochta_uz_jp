@@ -1,6 +1,7 @@
 package uz.pochtajp.service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
@@ -140,6 +141,10 @@ public class PostOwnerService {
             return postService.toResponse(post);
         }
         validate(post);
+        // Kanaldagi postdagi "Tahrirlangan" belgisi shu maydonga qarab qo'yiladi.
+        // Bu yergacha faqat haqiqiy o'zgarish bo'lganda kelinadi — `changed`
+        // bo'sh bo'lsa yuqorida qaytib ketilgan.
+        post.setEditedAt(Instant.now());
         postRepository.saveAndFlush(post);
 
         syncChannel(post, categories);

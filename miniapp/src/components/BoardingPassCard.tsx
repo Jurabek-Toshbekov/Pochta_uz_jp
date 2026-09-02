@@ -151,12 +151,27 @@ function formatDate(value: string | null): string {
   return `${parts[2]}.${parts[1]}.${parts[0]}`;
 }
 
+/**
+ * Og'irlik.
+ *
+ * Oraliq to'liq ko'rsatiladi — ilgari faqat maksimal chiqardi va pastki
+ * chegara yo'qolardi. Bitta chegara berilganda yo'nalish `≤` / `≥` bilan
+ * beriladi: kartada joy tor va bu belgilar tarjimani talab qilmaydi.
+ */
 function formatWeight(data: BoardingPassData, kg: string): string {
-  const max = data.weightKgMax ?? data.weightKg;
-  if (max === null || max === undefined) {
-    return '—';
+  const min = data.weightKg ?? null;
+  const max = data.weightKgMax ?? null;
+
+  if (min !== null && max !== null) {
+    return min === max ? `${trimNumber(min)} ${kg}` : `${trimNumber(min)}-${trimNumber(max)} ${kg}`;
   }
-  return `${trimNumber(max)} ${kg}`;
+  if (max !== null) {
+    return `≤ ${trimNumber(max)} ${kg}`;
+  }
+  if (min !== null) {
+    return `≥ ${trimNumber(min)} ${kg}`;
+  }
+  return '—';
 }
 
 function formatPrice(data: BoardingPassData, units: Record<PriceUnit, string>): string {

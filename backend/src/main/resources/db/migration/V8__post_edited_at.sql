@@ -1,0 +1,16 @@
+-- E'lon egasi tomonidan tahrirlangan payt (§9.1 — /my/:id/edit).
+--
+-- Nima uchun alohida ustun, `updated_at` yetarli emasmi:
+-- `updated_at` — @LastModifiedDate, ya'ni har qanday saqlashda o'zgaradi.
+-- Ko'rishlar soni (`view_count`) yoki kontakt ochilishi ham uni yangilaydi,
+-- shuning uchun undan "tahrirlangan" belgisini yasab bo'lmaydi: hech kim
+-- tegmagan e'lon ham tahrirlangandek ko'rinib qolardi.
+--
+-- Qiymat faqat e'lon mazmuni haqiqatan o'zgarganda qo'yiladi (o'zgarish
+-- topilmasa PostOwnerService umuman saqlamaydi). Kanaldagi postga
+-- "✏️ Tahrirlangan" satri shu maydonga qarab qo'shiladi.
+--
+-- Analitika uchun ham kerak: e'lonlarning necha foizi tahrirlanadi va
+-- publish'dan keyin qancha vaqt o'tib — bu forma qaysi maydonni noto'g'ri
+-- so'rayotganini ko'rsatadi (§6.3).
+ALTER TABLE posts ADD COLUMN edited_at TIMESTAMPTZ;

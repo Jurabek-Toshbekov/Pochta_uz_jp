@@ -125,6 +125,39 @@ class PostOwnerControllerIT extends AbstractIntegrationTest {
                 .doesNotContain("2000 JPY");
     }
 
+    /**
+     * Kanaldagi post o'zgarganini o'quvchi bilishi kerak, aks holda u eski
+     * narxni yangi deb o'ylab bog'lanadi.
+     */
+    @Test
+    @DisplayName("Tahrirdan keyin kanaldagi postda \"Tahrirlangan\" belgisi paydo bo'ladi")
+    void marksChannelMessageAsEdited() throws Exception {
+        String postId = createPost();
+
+        // Boshlang'ich postda belgi yo'q.
+        assertThat(channelPublisher.sentMessages()).isEmpty();
+
+        edit(postId, auth(), "{\"priceAmount\": 3500}").andExpect(status().isOk());
+
+        assertThat(channelPublisher.editedMessages()).hasSize(1);
+        assertThat(channelPublisher.editedMessages().get(0)).contains("Tahrirlangan");
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT edited_at FROM posts", java.sql.Timestamp.class)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("O'zgarish bo'lmasa \"Tahrirlangan\" belgisi qo'yilmaydi")
+    void doesNotMarkUnchangedPost() throws Exception {
+        String postId = createPost();
+
+        edit(postId, auth(), "{\"priceAmount\": 2000}").andExpect(status().isOk());
+
+        assertThat(channelPublisher.editedMessages()).isEmpty();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT edited_at FROM posts", java.sql.Timestamp.class)).isNull();
+    }
+
     @Test
     @DisplayName("post_edit eventi o'zgargan maydonlar bilan yoziladi (§1.6, §6.1)")
     void writesEditEventWithChangedFields() throws Exception {

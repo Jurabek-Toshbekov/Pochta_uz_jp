@@ -108,6 +108,50 @@ class PostControllerIT extends AbstractIntegrationTest {
                 .doesNotContain("testuser");
     }
 
+    /**
+     * Ilgari kanalda faqat maksimal og'irlik chiqardi: "5 dan 20 kg gacha"
+     * e'loni "20 kg gacha" bo'lib turardi va pastki chegara yo'qolardi.
+     */
+    @Test
+    @DisplayName("Og'irlik oralig'i to'liq chiqadi: 5-20 kg")
+    void showsWeightRange() throws Exception {
+        submit(validCarryBody()).andExpect(status().isCreated());
+
+        assertThat(channelPublisher.lastMessage())
+                .contains("5-20 kg")
+                .doesNotContain("20 kg gacha");
+    }
+
+    @Test
+    @DisplayName("Faqat maksimal berilsa — \"20 kg gacha\"")
+    void showsMaxOnlyWeight() throws Exception {
+        submit(validCarryBody().replace("\"weightKg\": 5,", "")).andExpect(status().isCreated());
+
+        assertThat(channelPublisher.lastMessage()).contains("20 kg gacha");
+    }
+
+    /** Faqat minimal berilganda "gacha" deyish teskari ma'no berardi. */
+    @Test
+    @DisplayName("Faqat minimal berilsa — \"kamida 5 kg\"")
+    void showsMinOnlyWeight() throws Exception {
+        submit(validCarryBody().replace("\"weightKgMax\": 20,", "")).andExpect(status().isCreated());
+
+        assertThat(channelPublisher.lastMessage())
+                .contains("kamida 5 kg")
+                .doesNotContain("gacha");
+    }
+
+    @Test
+    @DisplayName("Min va max bir xil bo'lsa oraliq emas, aniq qiymat")
+    void showsSingleWeightWhenEqual() throws Exception {
+        submit(validCarryBody().replace("\"weightKgMax\": 20,", "\"weightKgMax\": 5,"))
+                .andExpect(status().isCreated());
+
+        assertThat(channelPublisher.lastMessage())
+                .contains("5 kg")
+                .doesNotContain("5-5");
+    }
+
     @Test
     @DisplayName("post_submit va post_publish_success event'lari yoziladi (§1.6)")
     void writesFunnelEvents() throws Exception {

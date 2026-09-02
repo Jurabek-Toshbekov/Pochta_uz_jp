@@ -49,8 +49,18 @@ public class ChannelPostFormatter {
             text.append("<b>Izoh:</b> ").append(TelegramHtml.escape(post.getComment())).append('\n');
         }
 
+        // Belgilar bitta blok bo'lib chiqadi — orasida bo'sh qator qolmasin.
+        List<String> badges = new ArrayList<>(2);
         if (post.getUser().getVerificationLevel() != VerificationLevel.NONE) {
-            text.append("\n✅ Tasdiqlangan foydalanuvchi\n");
+            badges.add("✅ Tasdiqlangan foydalanuvchi");
+        }
+        if (post.getEditedAt() != null) {
+            // O'quvchi eski ma'lumot bilan bog'lanmasligi uchun: e'lon kanalga
+            // chiqqanidan keyin o'zgargan bo'lsa, buni ochiq aytamiz.
+            badges.add("✏️ Tahrirlangan");
+        }
+        if (!badges.isEmpty()) {
+            text.append('\n').append(String.join("\n", badges)).append('\n');
         }
 
         String hashtags = hashtags(post, categories);
@@ -153,12 +163,31 @@ public class ChannelPostFormatter {
         return parts.isEmpty() ? "—" : String.join(", ", parts);
     }
 
+    /**
+     * Og'irlik satri.
+     *
+     * <p>Oraliq to'liq ko'rsatiladi: ilgari faqat maksimal chiqardi va
+     * "1 dan 50 kg gacha" e'loni kanalda "50 kg gacha" bo'lib turardi —
+     * pastki chegara yo'qolar edi. Faqat minimal kiritilgan holat esa
+     * "50 kg gacha" deb teskari ma'no berardi.
+     */
     private String weight(Post post) {
-        BigDecimal max = post.getWeightKgMax() != null ? post.getWeightKgMax() : post.getWeightKg();
-        if (max == null) {
-            return null;
+        BigDecimal min = post.getWeightKg();
+        BigDecimal max = post.getWeightKgMax();
+
+        if (min != null && max != null) {
+            // Bir xil bo'lsa oraliq emas, aniq qiymat.
+            return min.compareTo(max) == 0
+                    ? trim(min) + " kg"
+                    : trim(min) + "-" + trim(max) + " kg";
         }
-        return trim(max) + " kg gacha";
+        if (max != null) {
+            return trim(max) + " kg gacha";
+        }
+        if (min != null) {
+            return "kamida " + trim(min) + " kg";
+        }
+        return null;
     }
 
     private String priceLine(Post post) {

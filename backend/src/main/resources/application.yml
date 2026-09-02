@@ -79,6 +79,8 @@ bot:
   channel-chat-id: ${CHANNEL_CHAT_ID:}
   channel-username: ${CHANNEL_USERNAME:}
   miniapp-url: ${MINIAPP_URL:}
+  # BotFather'da yaratilgan Mini App'ning qisqa nomi (t.me/<bot>/<qisqa nom>).
+  miniapp-short-name: ${BOT_MINIAPP_SHORT_NAME:app}
   init-data-max-age-seconds: ${INITDATA_MAX_AGE_SECONDS:86400}
   # polling (dev) | webhook (prod) | off
   mode: ${BOT_MODE:polling}

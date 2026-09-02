@@ -1,0 +1,38 @@
+# Mini App'ni Netlify'da joylashtirish.
+#
+# Netlify repo ildizidan shu faylni o'qiydi, `base` esa qurish `miniapp/`
+# ichida ketishini bildiradi.
+#
+# VITE_API_BASE_URL bu yerda YOZILMAYDI: u build vaqtida bundle ichiga
+# tushadi va har muhitda boshqacha bo'ladi. Uni Netlify UI'dan beriladi:
+#   Site configuration -> Environment variables
+#   VITE_API_BASE_URL = https://api.<sizning-domeningiz>
+# Manzil oxirida "/" bo'lmasin va u albatta HTTPS bo'lsin — Netlify sahifasi
+# HTTPS'da turadi, HTTP'ga so'rov brauzer tomonidan bloklanadi.
+
+[build]
+  base = "miniapp"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Dockerfile'dagi bilan bir xil — build natijasi ikkala joyda mos kelsin.
+  NODE_VERSION = "22"
+
+# HashRouter ishlatilgani uchun SPA rewrite qoidasi KERAK EMAS:
+# marshrut `#` dan keyin turadi va serverga umuman bormaydi.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # DIQQAT: X-Frame-Options yoki frame-ancestors QO'YILMAYDI.
+    # Mini App Telegram webview ichida ochiladi — ularni qo'ysak
+    # ilova umuman ko'rinmay qoladi.
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    # Vite fayl nomiga hash qo'yadi — abadiy keshlash xavfsiz.
+    Cache-Control = "public, max-age=31536000, immutable"

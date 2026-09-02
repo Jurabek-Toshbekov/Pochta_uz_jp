@@ -176,6 +176,16 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /**
+     * Egasi e'lon mazmunini oxirgi marta o'zgartirgan payt (§9.1).
+     *
+     * <p>{@code updatedAt} dan farqi: u har qanday saqlashda (ko'rishlar
+     * soni, kontakt ochilishi) yangilanadi, bu esa faqat haqiqiy tahrirda.
+     * Kanaldagi postga "Tahrirlangan" belgisi shunga qarab qo'yiladi.
+     */
+    @Column(name = "edited_at")
+    private Instant editedAt;
+
     /** Soft delete. Fizik DELETE taqiqlangan (§1.1). */
     @Column(name = "deleted_at")
     private Instant deletedAt;
@@ -498,6 +508,14 @@ public class Post {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Instant getEditedAt() {
+        return editedAt;
+    }
+
+    public void setEditedAt(Instant editedAt) {
+        this.editedAt = editedAt;
     }
 
     public Instant getDeletedAt() {

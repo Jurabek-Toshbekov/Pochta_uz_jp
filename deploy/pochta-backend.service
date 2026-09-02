@@ -1,0 +1,41 @@
+# systemd unit: backend qayta ishga tushadi va server restartidan keyin ham
+# o'zi ko'tariladi. `java -jar` ni qo'lda ishga tushirish yetarli emas —
+# SSH sessiyasi yopilishi bilan jarayon ham o'ladi.
+#
+# Joylashuvi: /etc/systemd/system/pochta-backend.service
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now pochta-backend
+#   sudo systemctl status pochta-backend
+#   journalctl -u pochta-backend -f
+
+[Unit]
+Description=Pochta JP-UZ backend
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pochta
+Group=pochta
+WorkingDirectory=/opt/pochta
+
+# Sirlar shu faylda: BOT_TOKEN, DB_PASSWORD, ADMIN_JWT_SECRET...
+# Egasi root, huquqi 600 bo'lsin (§1.2 — sir kodda emas, faylda).
+EnvironmentFile=/etc/pochta/pochta.env
+
+ExecStart=/usr/bin/java -jar /opt/pochta/pochta-backend.jar
+
+Restart=on-failure
+RestartSec=5s
+# Spring SIGTERM'da 143 bilan chiqadi — bu normal to'xtash.
+SuccessExitStatus=143
+
+# Xavfsizlik cheklovlari: jarayon o'ziga kerakmagan joyga yoza olmasin.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

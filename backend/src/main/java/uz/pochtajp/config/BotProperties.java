@@ -13,6 +13,11 @@ import org.springframework.validation.annotation.Validated;
  * @param channelChatId     CHANNEL_CHAT_ID — e'lonlar chiqadigan kanal
  * @param channelUsername   CHANNEL_USERNAME — kanaldagi postga havola yasash uchun (@ belgisiz)
  * @param miniappUrl        MINIAPP_URL — WebApp tugmasi shu manzilni ochadi
+ * @param miniappShortName  BOT_MINIAPP_SHORT_NAME — BotFather'da yaratilgan Mini App'ning
+ *                          qisqa nomi. {@code t.me/<bot>/<qisqa nom>?startapp=...} havolasi
+ *                          shundan yasaladi (§8.4). Telegram bu qismni qisqa nom deb o'qiydi:
+ *                          BotFather'da bunday app bo'lmasa havola "application not found"
+ *                          beradi. Standart {@code app}.
  * @param initDataMaxAgeSeconds  initData qancha vaqt amal qiladi (§7.1, 6-qadam)
  * @param mode              BOT_MODE — polling (dev) | webhook (prod) | off
  * @param webhookBaseUrl    WEBHOOK_BASE_URL — webhook rejimida backend'ning tashqi manzili
@@ -29,6 +34,7 @@ public record BotProperties(
         String channelChatId,
         String channelUsername,
         String miniappUrl,
+        String miniappShortName,
         long initDataMaxAgeSeconds,
         BotMode mode,
         String webhookBaseUrl,
@@ -38,11 +44,14 @@ public record BotProperties(
 
     public BotProperties {
         mode = mode == null ? BotMode.OFF : mode;
+        miniappShortName = miniappShortName == null || miniappShortName.isBlank()
+                ? "app"
+                : miniappShortName.strip();
     }
 
     /** Mini App'da e'lonni ochadigan deep link (§8.4). Manba: kanal. */
     public String deepLinkForPost(Object postId) {
-        return "https://t.me/" + username + "/app?startapp=ch_" + postId;
+        return miniappLink("ch_" + postId);
     }
 
     /**
@@ -54,7 +63,12 @@ public record BotProperties(
      * havola CTR'ni o'lchab bo'lmas holga keltiradi.
      */
     public String notificationLinkForPost(Object postId) {
-        return "https://t.me/" + username + "/app?startapp=nt_" + postId;
+        return miniappLink("nt_" + postId);
+    }
+
+    /** {@code t.me/<bot>/<qisqa nom>?startapp=<param>} — Mini App'ni ochadigan yagona format. */
+    private String miniappLink(String startParam) {
+        return "https://t.me/" + username + "/" + miniappShortName + "?startapp=" + startParam;
     }
 
     /**
