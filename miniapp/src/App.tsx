@@ -8,11 +8,13 @@ import { useSession } from './hooks/useSession';
 import { startParam } from './hooks/useTelegram';
 import { useT } from './i18n/useT';
 import { ConsentGate } from './pages/ConsentGate';
+import { EditPostPage } from './pages/EditPostPage';
 import { HomePage } from './pages/HomePage';
 import { MyPostsPage } from './pages/MyPostsPage';
 import { NewPostPage } from './pages/NewPostPage';
 import { PreviewPage } from './pages/PreviewPage';
 import { PostDetailPage } from './pages/PostDetailPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { SearchPage } from './pages/SearchPage';
 import { SubscriptionsPage } from './pages/SubscriptionsPage';
 import { SuccessPage } from './pages/SuccessPage';
@@ -60,6 +62,8 @@ export function App() {
       navigate('/new', { state: { entryPoint: 'bot_button' } });
     } else if (param === 'my') {
       navigate('/my');
+    } else if (param === 'profile') {
+      navigate('/profile');
     }
     // Faqat bir marta — session.data kelganda.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,6 +109,8 @@ export function App() {
       <Route path="/post/:postId" element={<PostDetailPage />} />
       <Route path="/subscriptions" element={<SubscriptionsPage />} />
       <Route path="/my" element={<MyPostsPage />} />
+      <Route path="/my/:postId/edit" element={<EditPostPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/success/:postId" element={<SuccessPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

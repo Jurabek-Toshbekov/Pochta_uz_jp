@@ -1,7 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BoardingPassCard } from '../components/BoardingPassCard';
-import { EmptyState, ErrorState, Loader, uiStyles as styles } from '../components/primitives';
+import { ClosePostDialog } from '../components/ClosePostDialog';
+import {
+  EmptyState,
+  ErrorState,
+  GhostButton,
+  Loader,
+  uiStyles as styles,
+} from '../components/primitives';
 import { useMyPosts } from '../hooks/useMyPosts';
 import { useReference } from '../hooks/useReference';
 import { useBackButton } from '../hooks/useTelegram';
@@ -16,6 +23,9 @@ export function MyPostsPage() {
   const navigate = useNavigate();
   const posts = useMyPosts();
   const reference = useReference();
+
+  /** Qaysi e'lon uchun yopish oynasi ochiq. */
+  const [closingId, setClosingId] = useState<string | null>(null);
 
   useBackButton(useCallback(() => navigate('/'), [navigate]));
 
@@ -52,23 +62,43 @@ export function MyPostsPage() {
           onAction={() => navigate('/new', { state: { entryPoint: 'my_posts' } })}
         />
       ) : (
-        list.map((post) => (
-          <BoardingPassCard
-            key={post.id}
-            data={toBoardingPassData(
-              post,
-              reference.data?.airports,
-              reference.data?.categories,
-              language,
-            )}
-            status={t.status[post.status]}
-            footer={
-              <p className={styles.hint}>
-                {post.viewCount} {t.my.views} · {post.contactRevealCount} {t.my.reveals}
-              </p>
-            }
-          />
-        ))
+        list.map((post) => {
+          // Yopilgan yoki rad etilgan e'lon ustida qiladigan ish qolmaydi —
+          // tugma ko'rsatilsa, u bosilib xato qaytarardi.
+          const editable = post.status === 'PUBLISHED' || post.status === 'PENDING';
+
+          return (
+            <BoardingPassCard
+              key={post.id}
+              data={toBoardingPassData(
+                post,
+                reference.data?.airports,
+                reference.data?.categories,
+                language,
+              )}
+              status={t.status[post.status]}
+              footer={
+                <>
+                  <p className={styles.hint}>
+                    {post.viewCount} {t.my.views} · {post.contactRevealCount} {t.my.reveals}
+                  </p>
+                  {editable && closingId !== post.id ? (
+                    <div className={`${styles.row} ${styles.rowFill}`}>
+                      <GhostButton
+                        label={t.my.edit}
+                        onClick={() => navigate(`/my/${post.id}/edit`)}
+                      />
+                      <GhostButton label={t.my.close} onClick={() => setClosingId(post.id)} />
+                    </div>
+                  ) : null}
+                  {closingId === post.id ? (
+                    <ClosePostDialog postId={post.id} onClose={() => setClosingId(null)} />
+                  ) : null}
+                </>
+              }
+            />
+          );
+        })
       )}
     </div>
   );

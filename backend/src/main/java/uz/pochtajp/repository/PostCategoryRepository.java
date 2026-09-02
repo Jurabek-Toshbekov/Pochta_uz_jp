@@ -27,4 +27,18 @@ public interface PostCategoryRepository extends JpaRepository<PostCategory, Post
             WHERE pc.id.postId IN :postIds
             """)
     List<PostCategory> findWithCategoryByPostIds(@Param("postIds") Collection<UUID> postIds);
+
+    /**
+     * E'lon tahrirlanganda olib tashlangan kategoriyalarni uzadi.
+     *
+     * <p>Bu §1.1 dagi "hech qachon DELETE" qoidasiga zid emas: {@code
+     * post_categories} — ma'lumot emas, e'lon bilan kategoriya orasidagi
+     * bog'lanish. O'zgarishning o'zi {@code post_edit} eventida
+     * {@code changed_fields} bilan qoladi.
+     *
+     * <p>Faqat farq o'chiriladi (hammasi emas): qolgan kategoriyalarni
+     * o'chirib qayta qo'shish bir tranzaksiya ichida bir xil kalit bilan
+     * to'qnashadi.
+     */
+    void deleteByPost_IdAndCategory_IdIn(UUID postId, Collection<Short> categoryIds);
 }

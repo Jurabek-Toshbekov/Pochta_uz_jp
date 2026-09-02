@@ -19,6 +19,7 @@ public class StubChannelPublisher implements ChannelPublisher {
 
     private final AtomicLong messageIdSequence = new AtomicLong(9_000);
     private final List<String> sentMessages = new CopyOnWriteArrayList<>();
+    private final List<String> editedMessages = new CopyOnWriteArrayList<>();
 
     private volatile boolean failing = false;
     private volatile boolean configured = true;
@@ -40,6 +41,18 @@ public class StubChannelPublisher implements ChannelPublisher {
         return messageIdSequence.incrementAndGet();
     }
 
+    @Override
+    public void editChannelMessage(long messageId, String html) {
+        if (failing) {
+            throw new ChannelPublishException("TELEGRAM_API_ERROR", "Test: Telegram javob bermadi");
+        }
+        editedMessages.add(messageId + ":" + html);
+    }
+
+    public List<String> editedMessages() {
+        return List.copyOf(editedMessages);
+    }
+
     public List<String> sentMessages() {
         return List.copyOf(sentMessages);
     }
@@ -54,6 +67,7 @@ public class StubChannelPublisher implements ChannelPublisher {
 
     public void reset() {
         sentMessages.clear();
+        editedMessages.clear();
         failing = false;
         configured = true;
     }

@@ -42,9 +42,15 @@ public class DealService {
 
     private static final Logger log = LoggerFactory.getLogger(DealService.class);
 
-    /** Foydalanuvchining javobi. */
+    /**
+     * Foydalanuvchining javobi.
+     *
+     * <p>{@code NOT_YET} e'lonni ochiq qoldiradi (bot 3 kundan keyin
+     * so'raganda mantiqiy javob), {@code NO_ANSWER} esa yopadi — buni
+     * foydalanuvchi Mini App'da o'zi tanlaydi: "javob bo'lmadi, yopaman".
+     */
     public enum Answer {
-        FOUND, NOT_YET, CANCELLED
+        FOUND, NOT_YET, CANCELLED, NO_ANSWER
     }
 
     private final PostRepository postRepository;
@@ -73,6 +79,18 @@ public class DealService {
      */
     @Transactional
     public boolean answer(UUID postId, UUID actorId, Answer answer) {
+        return answer(postId, actorId, answer, EventSource.BOT);
+    }
+
+    /**
+     * Xuddi shu javob, lekin manba ko'rsatilgan holda.
+     *
+     * <p>Bot ham, Mini App'dagi "E'lonni yopish" ham shu yerga keladi:
+     * qoidalar bitta joyda turishi kerak, aks holda ikki yo'lda ikki xil
+     * mantiq paydo bo'ladi va metrikalar mos kelmay qoladi.
+     */
+    @Transactional
+    public boolean answer(UUID postId, UUID actorId, Answer answer, EventSource source) {
         Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
                 .orElseThrow(() -> new NotFoundException("E'lon topilmadi."));
         if (!post.getUser().getId().equals(actorId)) {
@@ -83,7 +101,7 @@ public class DealService {
                 ? 0
                 : Duration.between(post.getPublishedAt(), Instant.now()).toHours();
 
-        eventLogger.track(TrackedEvent.of(EventName.DEAL_FOLLOWUP_ANSWER, EventSource.BOT)
+        eventLogger.track(TrackedEvent.of(EventName.DEAL_FOLLOWUP_ANSWER, source)
                 .user(actorId)
                 .post(postId)
                 .property("answer", answer.name())
@@ -91,9 +109,15 @@ public class DealService {
                 .build());
 
         return switch (answer) {
-            case FOUND -> confirmDeal(post, actorId, hoursSincePublish);
+            case FOUND -> confirmDeal(post, actorId, hoursSincePublish, source);
             case CANCELLED -> {
-                closePost(post, ClosedReason.CANCELLED, actorId, hoursSincePublish);
+                closePost(post, ClosedReason.CANCELLED, actorId, hoursSincePublish, source);
+                yield false;
+            }
+            case NO_ANSWER -> {
+                // Yopiladi, lekin sabab alohida saqlanadi: "hech kim yozmadi"
+                // — bu taklif yetishmasligining eng to'g'ridan-to'g'ri belgisi.
+                closePost(post, ClosedReason.NO_ANSWER, actorId, hoursSincePublish, source);
                 yield false;
             }
             case NOT_YET -> {
@@ -104,12 +128,12 @@ public class DealService {
         };
     }
 
-    private boolean confirmDeal(Post post, UUID actorId, long hoursSincePublish) {
+    private boolean confirmDeal(Post post, UUID actorId, long hoursSincePublish, EventSource source) {
         post.setDealConfirmedAt(Instant.now());
         post.setDealCounterpartId(guessCounterpart(post.getId()));
-        closePost(post, ClosedReason.FOUND, actorId, hoursSincePublish);
+        closePost(post, ClosedReason.FOUND, actorId, hoursSincePublish, source);
 
-        eventLogger.track(TrackedEvent.of(EventName.DEAL_CONFIRMED, EventSource.BOT)
+        eventLogger.track(TrackedEvent.of(EventName.DEAL_CONFIRMED, source)
                 .user(actorId)
                 .post(post.getId())
                 .property("counterpart_id", post.getDealCounterpartId() == null
@@ -130,12 +154,13 @@ public class DealService {
         return post.getDealCounterpartId() != null;
     }
 
-    private void closePost(Post post, ClosedReason reason, UUID actorId, long hoursSincePublish) {
+    private void closePost(Post post, ClosedReason reason, UUID actorId, long hoursSincePublish,
+                           EventSource source) {
         post.setStatus(PostStatus.CLOSED);
         post.setClosedReason(reason);
         postRepository.save(post);
 
-        eventLogger.track(TrackedEvent.of(EventName.POST_CLOSE, EventSource.BOT)
+        eventLogger.track(TrackedEvent.of(EventName.POST_CLOSE, source)
                 .user(actorId)
                 .post(post.getId())
                 .property("reason", reason.name())

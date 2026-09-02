@@ -290,3 +290,76 @@ export interface TrustResponse {
   trustScore: number | null;
   message: string;
 }
+
+// ---------------------------------------------------------------------
+// E'lonni tahrirlash va yopish (§9.1 — /my/:id/edit)
+// ---------------------------------------------------------------------
+
+/**
+ * `PATCH /api/miniapp/posts/{id}`.
+ *
+ * Tur, yo'nalish va aeroportlar yo'q — ular e'lonning o'zligi. Ularni
+ * almashtirish ko'rishlar va kanaldagi postni eskisiga bog'liq qoldiradi
+ * va metrikalarni buzadi. `undefined` — "tegmang", bo'sh satr — "tozalang".
+ */
+export interface UpdatePostRequest {
+  finalDestination?: string | null;
+  departDate?: string | null;
+  deadlineDate?: string | null;
+  dateFlexibleDays?: number;
+  weightKg?: number | null;
+  weightKgMax?: number | null;
+  priceAmount?: number | null;
+  priceCurrency?: Currency | null;
+  priceUnit?: PriceUnit;
+  categoryIds?: number[];
+  comment?: string | null;
+  contactPhone?: string | null;
+  contactTelegram?: string | null;
+  contactOther?: string | null;
+  sessionId?: string;
+  platform?: string;
+}
+
+/**
+ * Yopish sababi (§6.4, 3-band). Uchtasi ataylab alohida:
+ * `NO_ANSWER` ulushi mahsulot muammosining yagona to'g'ridan-to'g'ri signali.
+ */
+export type CloseReason = 'FOUND' | 'CANCELLED' | 'NO_ANSWER';
+
+export interface ClosePostRequest {
+  reason: CloseReason;
+}
+
+// ---------------------------------------------------------------------
+// Profil (§9.1 — /profile)
+// ---------------------------------------------------------------------
+
+/** `GET /api/miniapp/me`. `SessionResponse` dan farqi — telefon va statistika. */
+export interface Profile {
+  telegramId: number;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  uiLanguage: LanguageCode;
+  role: UserRole;
+  verificationLevel: VerificationLevel;
+  trustScore: number;
+  phone: string | null;
+  phoneVerified: boolean;
+  consentTosAt: string | null;
+  consentPrivacyAt: string | null;
+  firstSeenAt: string;
+  postCount: number;
+  activePostCount: number;
+  dealCount: number;
+  reviewCount: number;
+  averageRating: number | null;
+}
+
+/** `PATCH /api/miniapp/me` — faqat shu ikkisi o'zgaradi. */
+export interface UpdateProfileRequest {
+  uiLanguage?: LanguageCode;
+  /** Bo'sh satr — raqamni o'chirish (§7.2). */
+  phone?: string;
+}

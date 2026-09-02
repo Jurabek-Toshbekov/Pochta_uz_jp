@@ -190,6 +190,9 @@ public class BotUpdateHandler {
                 case FOUND -> texts.dealThanksFound();
                 case NOT_YET -> texts.dealThanksNotYet();
                 case CANCELLED -> texts.dealThanksCancelled();
+                // Bot bu variantni taklif qilmaydi ("javob bo'lmadi" — Mini App'dagi
+                // yopish dialogida). Switch to'liq bo'lishi uchun shu yerda turadi.
+                case NO_ANSWER -> texts.dealThanksCancelled();
             }, null);
 
             if (askReview) {

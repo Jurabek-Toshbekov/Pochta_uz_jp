@@ -20,6 +20,12 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     /** Kunlik e'lon chegarasi uchun (§7.2 — 5 e'lon/kun). */
     long countByUser_IdAndCreatedAtAfterAndDeletedAtIsNull(UUID userId, Instant since);
 
+    /** Profil ekrani: jami e'lonlar (§9.1). */
+    long countByUser_IdAndDeletedAtIsNull(UUID userId);
+
+    /** Profil ekrani: hozir kanalda turganlari. */
+    long countByUser_IdAndStatusAndDeletedAtIsNull(UUID userId, uz.pochtajp.domain.enums.PostStatus status);
+
     /** "Mening e'lonlarim" — eng yangisi tepada. */
     List<Post> findByUser_IdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID userId);
 

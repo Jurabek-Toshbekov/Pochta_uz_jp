@@ -13,6 +13,17 @@ public interface ChannelPublisher {
      */
     long publishToChannel(String html);
 
+    /**
+     * Kanaldagi mavjud postni yangilaydi (e'lon tahrirlanganda, §12 PATCH).
+     *
+     * <p>Kanalda eski narx yoki sana turib qolsa, odam noto'g'ri ma'lumot
+     * bilan bog'lanadi — shuning uchun tahrir kanalga ham yetkaziladi.
+     *
+     * @param messageId {@code channel_message_id}
+     * @throws ChannelPublishException yangilab bo'lmasa
+     */
+    void editChannelMessage(long messageId, String html);
+
     /** Kanalga yuborish imkoni bormi (token/chat_id sozlanganmi). */
     boolean isConfigured();
 

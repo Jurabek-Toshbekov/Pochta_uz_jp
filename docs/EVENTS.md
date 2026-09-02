@@ -74,6 +74,17 @@ metrikasi soxtalashadi).
 | `post_edit` | **SERVER** | `post_id`, `changed_fields[]` |
 | `post_close` | **SERVER** | `post_id`, `reason`, `hours_since_publish` |
 
+`post_edit` va `post_close` manbasi (`source`) e'lon qayerdan o'zgartirilganini
+ko'rsatadi: `MINIAPP` — foydalanuvchi "Mening e'lonlarim"dan, `BOT` — "Odam
+topdingizmi?" savoliga javob. Ikkalasi bitta mantiqdan (`DealService`) o'tadi,
+aks holda fill rate ikkiga bo'linib ketardi.
+
+`post_close.reason` — to'rt qiymat: `FOUND` (mahsulot ishladi), `CANCELLED`
+(odamning rejasi o'zgardi), `NO_ANSWER` (e'lon chiqdi-yu hech kim yozmadi) va
+`EXPIRED` (muddat tugagani uchun tizim yopdi). `NO_ANSWER` ulushi — taklif
+yetishmasligining eng to'g'ridan-to'g'ri signali, shuning uchun u `CANCELLED`
+bilan qo'shib yuborilmaydi (§6.4, 3-band).
+
 ## 3. Qidiruv (ikkinchi eng muhim)
 
 | Event | Manba | Properties |
@@ -161,6 +172,8 @@ hisoblari shu jadvaldan o'qiladi.
 | `report_submitted` (shikoyat) | ✅ `ReportService` |
 | `review_left` (baho) | ✅ `ReviewService` |
 | `deal_confirmed`, `deal_followup_answer` | ✅ `DealService` |
+| `post_edit`, `post_close` (Mini App'dan) | ✅ `PostOwnerService` — `PATCH /posts/{id}`, `POST /posts/{id}/close` |
+| `language_changed` (Mini App profili) | ✅ `ProfileService` — `PATCH /me` |
 | `notification_sent`, `notification_opened` | ✅ `NotificationService` |
 | `daily_metrics` agregati | ✅ `service/DailyMetricsJob.java` (har kecha 03:15 UTC) |
 | `notification_converted` | ⏳ kelajak: xabarnomadan kelib kontakt ochish |

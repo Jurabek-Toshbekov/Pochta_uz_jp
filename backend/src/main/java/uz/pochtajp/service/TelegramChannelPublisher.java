@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -33,6 +34,28 @@ public class TelegramChannelPublisher implements ChannelPublisher {
     @Override
     public boolean isConfigured() {
         return channelChatId != null && !channelChatId.isBlank();
+    }
+
+    @Override
+    public void editChannelMessage(long messageId, String html) {
+        if (!isConfigured()) {
+            throw new ChannelPublishException("CHANNEL_NOT_CONFIGURED",
+                    "CHANNEL_CHAT_ID sozlanmagan — kanaldagi post yangilanmadi");
+        }
+        EditMessageText edit = EditMessageText.builder()
+                .chatId(channelChatId)
+                .messageId((int) messageId)
+                .text(html)
+                .parseMode("HTML")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
+                .build();
+        try {
+            telegramClient.execute(edit);
+            log.info("Kanaldagi post yangilandi: message_id={}", messageId);
+        } catch (TelegramApiException ex) {
+            throw new ChannelPublishException("TELEGRAM_API_ERROR",
+                    "Telegram API xatosi: " + ex.getMessage(), ex);
+        }
     }
 
     @Override

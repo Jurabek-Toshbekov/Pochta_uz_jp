@@ -25,6 +25,7 @@ export const uz = {
     newPost: 'E‘lon berish',
     search: 'Qidirish',
     myPosts: 'Mening e‘lonlarim',
+    profile: 'Profil',
   },
 
   consent: {
@@ -135,6 +136,59 @@ export const uz = {
     closed: 'Yopilgan',
     views: 'ko‘rildi',
     reveals: 'bog‘lanish',
+    edit: 'Tahrirlash',
+    close: 'E‘lonni yopish',
+  },
+
+  edit: {
+    title: 'E‘lonni tahrirlash',
+    hint: 'Tur, yo‘nalish va aeroport o‘zgarmaydi — ular o‘zgarsa bu boshqa e‘lon bo‘ladi. Yangisini bering.',
+    save: 'O‘zgarishni saqlash',
+    saving: 'Saqlanmoqda…',
+    saved: 'Saqlandi. Kanaldagi e‘lon ham yangilandi.',
+    noChanges: 'Hech narsa o‘zgarmagan.',
+    notEditable: 'Bu e‘lon yopilgan — tahrirlab bo‘lmaydi. Yangi e‘lon bering.',
+    dateCarry: 'Uchish sanasi',
+    dateSend: 'Qachongacha kerak',
+  },
+
+  close: {
+    title: 'E‘lonni nega yopyapsiz?',
+    hint: 'Javobingiz bizga nima ishlamayotganini ko‘rsatadi.',
+    found: 'Odam topildi',
+    cancelled: 'Rejam o‘zgardi',
+    noAnswer: 'Hech kim yozmadi',
+    submit: 'E‘lonni yopish',
+    done: 'E‘lon yopildi.',
+  },
+
+  profile: {
+    title: 'Profil',
+    language: 'Til',
+    phone: 'Telefon',
+    phoneHint: 'Telefon kanalda ko‘rinmaydi. Faqat «Bog‘lanish» bosgan odamga ochiladi.',
+    phoneSave: 'Telefonni saqlash',
+    phoneRemove: 'Telefonni o‘chirish',
+    stats: 'Statistika',
+    posts: 'e‘lon',
+    activePosts: 'kanalda',
+    deals: 'bitim',
+    reviews: 'baho',
+    trust: 'Ishonch balli',
+    rating: 'Reyting',
+    noRating: 'Hali baho yo‘q',
+    verification: 'Tasdiqlanish',
+    memberSince: 'Ro‘yxatdan o‘tgan',
+    dataTitle: 'Mening ma‘lumotlarim',
+    dataHint: 'Sizda saqlangan barcha ma‘lumotni JSON fayl sifatida olishingiz mumkin.',
+    exportData: 'Ma‘lumotni yuklab olish',
+    saved: 'Saqlandi.',
+  },
+
+  verification: {
+    NONE: 'Tasdiqlanmagan',
+    PHONE: 'Telefon tasdiqlangan',
+    DOCUMENT: 'Hujjat tasdiqlangan',
   },
 
   status: {

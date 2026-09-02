@@ -1,5 +1,6 @@
 import { request } from './client';
 import type {
+  ClosePostRequest,
   Contact,
   CreatePostRequest,
   DraftRequest,
@@ -8,6 +9,7 @@ import type {
   PostResponse,
   PostSearchParams,
   PostSearchResult,
+  Profile,
   ReferenceResponse,
   ReportInput,
   ReviewInput,
@@ -17,6 +19,8 @@ import type {
   SubscriptionInput,
   TrackEventPayload,
   TrustResponse,
+  UpdatePostRequest,
+  UpdateProfileRequest,
 } from './types';
 
 /** Filtrlarni query-string'ga o'giradi. Bo'sh qiymatlar tashlab yuboriladi. */
@@ -89,6 +93,19 @@ export const api = {
     request<void>(`/api/miniapp/subscriptions/${id}`, { method: 'DELETE' }),
 
   myPost: (id: string) => request<PostResponse>(`/api/miniapp/my/posts/${id}`),
+
+  /** O'z e'lonini tahrirlash. Berilmagan maydonlarga tegilmaydi. */
+  updatePost: (id: string, body: UpdatePostRequest) =>
+    request<PostResponse>(`/api/miniapp/posts/${id}`, { method: 'PATCH', body }),
+
+  /** E'lonni sabab bilan yopish (§6.4, 3-band). */
+  closePost: (id: string, body: ClosePostRequest) =>
+    request<PostResponse>(`/api/miniapp/posts/${id}/close`, { method: 'POST', body }),
+
+  profile: () => request<Profile>('/api/miniapp/me'),
+
+  updateProfile: (body: UpdateProfileRequest) =>
+    request<Profile>('/api/miniapp/me', { method: 'PATCH', body }),
 
   getDraft: () => request<DraftResponse>('/api/miniapp/drafts'),
 
