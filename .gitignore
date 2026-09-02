@@ -46,3 +46,6 @@ dist/
 .vite/
 *.tsbuildinfo
 npm-debug.log*
+
+# Netlify CLI holati (sayt ID va lokal bog'lanish)
+.netlify/
