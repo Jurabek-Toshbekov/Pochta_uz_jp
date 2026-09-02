@@ -1,5 +1,11 @@
 import type { CargoCategory } from '../../api/types';
-import { usePostFormStore } from '../../store/postFormStore';
+import {
+  MAX_CATEGORIES,
+  MAX_WEIGHT_KG,
+  MIN_WEIGHT_KG,
+  usePostFormStore,
+  weightError,
+} from '../../store/postFormStore';
 import { useT } from '../../i18n/useT';
 import {
   Chip,
@@ -34,18 +40,32 @@ export function Step3Cargo({ categories, fieldErrors }: Props) {
 
   const warnings = highRiskWarnings(categories, state.categoryIds);
   const negotiable = state.priceUnit === 'NEGOTIABLE';
+  const atLimit = state.categoryIds.length >= MAX_CATEGORIES;
+  // Chegaradan chiqqan og'irlik shu yerda aytiladi, "Kanalga yuborish"da emas.
+  const weightIssue = weightError(state);
+  const weightMessage =
+    weightIssue === 'range'
+      ? t.step3.weightRange
+      : weightIssue === 'order'
+        ? `${t.step3.weightFrom} > ${t.step3.weightTo}`
+        : undefined;
 
   return (
     <div className={`${styles.section} ${styles.slide}`}>
       <h2>{t.step3.title}</h2>
 
-      <Field label={t.step3.categories} hint={t.step3.categoriesHint} error={fieldErrors.categoryIds}>
+      <Field
+        label={`${t.step3.categories} (${state.categoryIds.length}/${MAX_CATEGORIES})`}
+        hint={atLimit ? t.step3.categoriesLimit : t.step3.categoriesHint}
+        error={fieldErrors.categoryIds}
+      >
         <ChipGroup label={t.step3.categories}>
           {categories.map((category) => (
             <Chip
               key={category.id}
               label={`${category.emoji ?? ''} ${categoryTitle(category, language)}`.trim()}
               active={state.categoryIds.includes(category.id)}
+              disabled={atLimit && !state.categoryIds.includes(category.id)}
               onToggle={() => toggleCategory(category.id)}
             />
           ))}
@@ -58,27 +78,33 @@ export function Step3Cargo({ categories, fieldErrors }: Props) {
         </Notice>
       ))}
 
-      <Field label={`${t.step3.weight} (${t.common.kg})`} error={fieldErrors.weightKg ?? fieldErrors.weightKgMax}>
+      <Field
+        label={`${t.step3.weight} (${t.common.kg}, ${t.common.optional})`}
+        hint={t.step3.weightRange}
+        error={weightMessage ?? fieldErrors.weightKg ?? fieldErrors.weightKgMax}
+      >
         <div className={`${styles.row} ${styles.rowFill}`}>
           <input
             type="number"
             inputMode="decimal"
-            min={0.1}
-            max={100}
+            min={MIN_WEIGHT_KG}
+            max={MAX_WEIGHT_KG}
             step={0.5}
             value={state.weightKg}
             aria-label={`${t.step3.weight} ${t.step3.weightFrom}`}
+            className={weightIssue ? styles.inputError : undefined}
             placeholder={t.step3.weightFrom}
             onChange={(event) => patch({ weightKg: event.target.value }, STEP.CARGO)}
           />
           <input
             type="number"
             inputMode="decimal"
-            min={0.1}
-            max={100}
+            min={MIN_WEIGHT_KG}
+            max={MAX_WEIGHT_KG}
             step={0.5}
             value={state.weightKgMax}
             aria-label={`${t.step3.weight} ${t.step3.weightTo}`}
+            className={weightIssue ? styles.inputError : undefined}
             placeholder={t.step3.weightTo}
             onChange={(event) => patch({ weightKgMax: event.target.value }, STEP.CARGO)}
           />

@@ -251,8 +251,66 @@
   border-top: 1px solid var(--line);
 }
 
+/*
+ * Tanlangan aeroport aniq ko'rinishi shart: bu 2-qadamning yagona qarori
+ * va foydalanuvchi uni tasdiqlaganini darhol bilishi kerak. Ilgari faqat
+ * fon rangi biroz o'zgarardi va telefon ekranida deyarli sezilmasdi.
+ */
 .airportItemActive {
-  background: var(--surface-sunken);
+  background: color-mix(in srgb, var(--indigo) 12%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--indigo);
+  font-weight: 600;
+}
+
+.airportItemActive .airportCode,
+.airportItemActive .airportCity {
+  color: var(--indigo);
+}
+
+/* Belgisi — rangni ajratolmaydiganlar uchun ham signal qoladi. */
+.airportItemActive::after {
+  content: '✓';
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--indigo);
+  font-weight: 700;
+}
+
+/* Tanlangan yo'nalish xulosasi: NRT → TAS */
+.routeSummary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--indigo);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--indigo) 8%, var(--surface));
+}
+
+.routeSummaryCode {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  letter-spacing: 0.08em;
+  color: var(--indigo);
+}
+
+.routeSummaryCode[data-empty='true'] {
+  color: var(--text-muted);
+}
+
+.routeSummaryArrow {
+  color: var(--text-muted);
+}
+
+.routeSummaryCity {
+  display: block;
+  font-family: var(--font-ui, inherit);
+  font-size: var(--text-xs);
+  letter-spacing: normal;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 .airportCode {

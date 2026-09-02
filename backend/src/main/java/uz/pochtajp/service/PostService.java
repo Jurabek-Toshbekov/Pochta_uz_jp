@@ -303,12 +303,21 @@ public class PostService {
         }
     }
 
+    /**
+     * Telegram ham, telefon ham majburiy.
+     *
+     * <p>Nima uchun ikkalasi: "Bog'lanish" bosgan odam bitta yo'l ishlamay
+     * qolsa (username o'zgargan, raqam o'chirilgan) ikkinchisidan yozadi.
+     * Bitta kontakt qolganda e'lon ko'rinadi-yu bitim boshlanmaydi, ya'ni
+     * fill rate tushadi (§6.3). {@code contactOther} — qo'shimcha, u
+     * ikkovining o'rnini bosmaydi.
+     */
     private void validateContact(CreatePostRequest request, ValidationException.Collector errors) {
-        boolean hasContact = !isBlank(request.contactPhone())
-                || !isBlank(request.contactTelegram())
-                || !isBlank(request.contactOther());
-        if (!hasContact) {
-            errors.add("contactTelegram", "Kamida bitta aloqa usulini qoldiring.");
+        if (isBlank(request.contactTelegram())) {
+            errors.add("contactTelegram", "Telegram username'ingizni yozing.");
+        }
+        if (isBlank(request.contactPhone())) {
+            errors.add("contactPhone", "Telefon raqamingizni yozing.");
         }
     }
 

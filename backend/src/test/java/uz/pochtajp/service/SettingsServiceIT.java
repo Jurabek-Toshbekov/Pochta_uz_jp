@@ -64,6 +64,7 @@ class SettingsServiceIT extends AbstractIntegrationTest {
                   "priceUnit": "PER_KG",
                   "categoryIds": [1],
                   "contactTelegram": "@testuser",
+                  "contactPhone": "+998901234567",
                   "safetyChecklistOk": true,
                   "platform": "ios"
                 }""".formatted(tomorrow);

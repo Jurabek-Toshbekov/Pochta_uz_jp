@@ -105,14 +105,23 @@ export function PreviewPage() {
           });
           const step = firstErrorStep(error.fieldErrors);
           if (step) {
-            navigate('/new', { state: { entryPoint: 'validation' } });
+            // Xato qaysi qadamda bo'lsa, o'sha qadam ochiladi va xabar
+            // ko'rsatiladi. Ilgari 1-qadamga jim qaytarilardi va bosish
+            // umuman ta'sir qilmagandek tuyulardi.
+            navigate('/new', {
+              state: {
+                entryPoint: 'validation',
+                step,
+                message: Object.values(error.fieldErrors)[0] ?? t.preview.fixErrors,
+              },
+            });
             return;
           }
         }
         setSubmitError(error.message);
       },
     });
-  }, [accepted, createPost, navigate, resetForm, setErrors]);
+  }, [accepted, createPost, navigate, resetForm, setErrors, t]);
 
   useMainButton({
     text: createPost.isPending ? t.preview.submitting : t.preview.submit,

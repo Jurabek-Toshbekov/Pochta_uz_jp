@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import WebApp from '@twa-dev/sdk';
@@ -13,6 +13,13 @@ import { uz } from '../i18n/uz';
  * yuborish" tugmasi o'chiq. Bu test o'sha qoidani qo'riqlaydi — kimdir
  * checklist'ni "vaqtincha" olib tashlasa, test qizil bo'ladi.
  */
+const navigateMock = vi.hoisted(() => vi.fn());
+
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return { ...actual, useNavigate: () => navigateMock };
+});
+
 const REFERENCE = {
   airports: [
     {
@@ -69,6 +76,7 @@ function renderPreview() {
 describe('PreviewPage — xavfsizlik checklist', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    navigateMock.mockReset();
     usePostFormStore.getState().reset();
     usePostFormStore.getState().patch({
       postType: 'CARRY',
@@ -134,5 +142,58 @@ describe('PreviewPage — xavfsizlik checklist', () => {
     expect(await screen.findByText('NRT')).toBeInTheDocument();
     expect(screen.getByText('TAS')).toBeInTheDocument();
     expect(screen.getByText(uz.postType.CARRY)).toBeInTheDocument();
+  });
+
+  /**
+   * Server 400 qaytarganda foydalanuvchi jim 1-qadamga tashlanardi va
+   * "Kanalga yuborish" umuman ishlamayotgandek tuyulardi. Endi xato bo'lgan
+   * qadam ochiladi va xabar ko'rsatiladi.
+   */
+  it('server maydon xatosi bersa — xato qadamiga xabar bilan qaytaradi', async () => {
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/reference')) {
+        return new Response(JSON.stringify(REFERENCE), { status: 200 });
+      }
+      if (url.includes('/posts') && init?.method === 'POST') {
+        return new Response(
+          JSON.stringify({
+            code: 'VALIDATION',
+            message: 'Validatsiya xatosi',
+            fieldErrors: { categoryIds: "Ko'pi bilan 5 ta yuk turi tanlanadi" },
+            occurredAt: '2026-09-02T00:00:00Z',
+          }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+      return new Response('', { status: 204 });
+    }) as unknown as typeof fetch;
+
+    const user = userEvent.setup();
+    renderPreview();
+
+    const boxes = await screen.findAllByRole('checkbox');
+    for (const box of boxes) {
+      await user.click(box);
+    }
+
+    // "Kanalga yuborish" — Telegram MainButton'i, DOM'da tugma yo'q.
+    const calls = vi.mocked(WebApp.MainButton.onClick).mock.calls;
+    const submit = calls[calls.length - 1]?.[0] as () => void;
+    await act(async () => {
+      submit();
+    });
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith(
+        '/new',
+        expect.objectContaining({
+          state: expect.objectContaining({
+            step: 'step3_cargo',
+            message: "Ko'pi bilan 5 ta yuk turi tanlanadi",
+          }),
+        }),
+      );
+    });
   });
 });

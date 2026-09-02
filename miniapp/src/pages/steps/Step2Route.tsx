@@ -4,6 +4,8 @@ import { useT } from '../../i18n/useT';
 import { AirportPicker } from '../../components/AirportPicker';
 import { CheckRow, Field, SegmentedControl, uiStyles as styles } from '../../components/primitives';
 import { STEP } from '../../analytics/events';
+import { airportCity } from '../../lib/boardingPass';
+import { useLanguage } from '../../store/appStore';
 
 interface Props {
   originAirports: Airport[];
@@ -17,15 +19,51 @@ interface Props {
  */
 export function Step2Route({ originAirports, destAirports, fieldErrors }: Props) {
   const t = useT();
+  const language = useLanguage();
   const state = usePostFormStore();
   const { patch } = state;
 
   const today = new Date().toISOString().slice(0, 10);
   const dateLabel = state.postType === 'CARRY' ? t.step2.dateCarry : t.step2.dateSend;
 
+  const origin = endpointLabel(
+    state.originAirport,
+    state.originCityFree,
+    originAirports,
+    language,
+    t.step2.pickOrigin,
+  );
+  const dest = endpointLabel(
+    state.destAirport,
+    state.destCityFree,
+    destAirports,
+    language,
+    t.step2.pickDest,
+  );
+
   return (
     <div className={`${styles.section} ${styles.slide}`}>
       <h2>{t.step2.title}</h2>
+
+      {/*
+        Tanlangan yo'nalish tepada turadi: ro'yxat uzun va foydalanuvchi
+        pastga surganda nimani tanlaganini ko'rmay qoladi.
+      */}
+      <Field label={t.step2.selectedRoute}>
+        <div className={styles.routeSummary}>
+          <span className={styles.routeSummaryCode} data-empty={String(!origin.chosen)}>
+            {origin.code}
+            <span className={styles.routeSummaryCity}>{origin.city}</span>
+          </span>
+          <span className={styles.routeSummaryArrow} aria-hidden="true">
+            &rarr;
+          </span>
+          <span className={styles.routeSummaryCode} data-empty={String(!dest.chosen)}>
+            {dest.code}
+            <span className={styles.routeSummaryCity}>{dest.city}</span>
+          </span>
+        </div>
+      </Field>
 
       <AirportPicker
         label={t.step2.origin}
@@ -91,4 +129,26 @@ export function Step2Route({ originAirports, destAirports, fieldErrors }: Props)
       ) : null}
     </div>
   );
+}
+
+/** Xulosa satri uchun: kod va shahar nomi (tanlanmagan bo'lsa — taklif). */
+function endpointLabel(
+  code: string | null,
+  freeCity: string,
+  airports: Airport[],
+  language: ReturnType<typeof useLanguage>,
+  placeholder: string,
+): { code: string; city: string; chosen: boolean } {
+  if (code) {
+    const airport = airports.find((candidate) => candidate.code === code);
+    return {
+      code,
+      city: airportCity(airport, language) ?? '',
+      chosen: true,
+    };
+  }
+  if (freeCity.trim()) {
+    return { code: '•••', city: freeCity.trim(), chosen: true };
+  }
+  return { code: '—', city: placeholder, chosen: false };
 }

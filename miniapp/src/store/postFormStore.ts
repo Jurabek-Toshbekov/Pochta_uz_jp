@@ -9,6 +9,16 @@ import { getPlatform, getSessionId } from '../analytics/track';
  * Serverga yuborishdan oldin {@link toCreateRequest} ularni tipli qiymatga
  * o'giradi: sana `LocalDate`, narx `BigDecimal` (§1.5).
  */
+/**
+ * Backenddagi `@Size(max = 5)` va `@DecimalMin/@DecimalMax` bilan bir xil
+ * chegaralar. Bu yerda takrorlanishining sababi: chegara faqat serverda
+ * bo'lsa, foydalanuvchi butun formani to'ldirib, oxirida 400 oladi.
+ * Server baribir oxirgi hakam — bu faqat oldini olish.
+ */
+export const MAX_CATEGORIES = 5;
+export const MIN_WEIGHT_KG = 0.1;
+export const MAX_WEIGHT_KG = 100;
+
 export interface PostFormState {
   postType: PostType | null;
   direction: Direction | null;
@@ -93,11 +103,16 @@ export const usePostFormStore = create<PostFormState & PostFormActions>((set, ge
     })),
 
   toggleCategory: (id) =>
-    set((state) => ({
-      categoryIds: state.categoryIds.includes(id)
-        ? state.categoryIds.filter((value) => value !== id)
-        : [...state.categoryIds, id],
-    })),
+    set((state) => {
+      if (state.categoryIds.includes(id)) {
+        return { categoryIds: state.categoryIds.filter((value) => value !== id) };
+      }
+      // 6-tanlov jim yutiladi: chegarani ekran o'zi ko'rsatib turadi.
+      if (state.categoryIds.length >= MAX_CATEGORIES) {
+        return state;
+      }
+      return { categoryIds: [...state.categoryIds, id] };
+    }),
 
   setCheck: (index, value) =>
     set((state) => {
@@ -113,13 +128,21 @@ export const usePostFormStore = create<PostFormState & PostFormActions>((set, ge
   },
 
   hydrate: (payload) =>
-    set((state) => ({
-      ...state,
-      ...(payload as Partial<PostFormState>),
-      // Checklist hech qachon draftdan tiklanmaydi — har safar qaytadan
-      // belgilanishi kerak (§7.3).
-      checks: [false, false, false],
-    })),
+    set((state) => {
+      const next = { ...state, ...(payload as Partial<PostFormState>) };
+      return {
+        ...next,
+        // Eski draftda chegaradan ortiq kategoriya bo'lishi mumkin (chegara
+        // keyinroq qo'shilgan). Uni shu yerda kesmasak, draft tiklanishi
+        // bilan forma yana serverdan 400 oladigan holatga qaytadi.
+        categoryIds: Array.isArray(next.categoryIds)
+          ? next.categoryIds.slice(0, MAX_CATEGORIES)
+          : [],
+        // Checklist hech qachon draftdan tiklanmaydi — har safar qaytadan
+        // belgilanishi kerak (§7.3).
+        checks: [false, false, false],
+      };
+    }),
 
   reset: () => set({ ...EMPTY, editCounts: {} }),
 }));
@@ -176,6 +199,27 @@ export function toCreateRequest(state: PostFormState): CreatePostRequest {
   };
 }
 
+/**
+ * Og'irlik maydonlaridagi xato (bo'lmasa {@code null}).
+ *
+ * Og'irlik ixtiyoriy, lekin yozilgan bo'lsa chegaraga tushishi kerak —
+ * aks holda xato faqat "Kanalga yuborish"da, ya'ni eng kech paytda chiqadi.
+ */
+export function weightError(state: PostFormState): 'range' | 'order' | null {
+  const min = toNumber(state.weightKg);
+  const max = toNumber(state.weightKgMax);
+  const outOfRange = (value: number | null) =>
+    value !== null && (value < MIN_WEIGHT_KG || value > MAX_WEIGHT_KG);
+
+  if (outOfRange(min) || outOfRange(max)) {
+    return 'range';
+  }
+  if (min !== null && max !== null && max < min) {
+    return 'order';
+  }
+  return null;
+}
+
 /** Har bir qadam to'ldirilganini tekshiradi — "Davom etish" tugmasi shunga qarab yonadi. */
 export function isStepComplete(step: string, state: PostFormState): boolean {
   switch (step) {
@@ -190,13 +234,16 @@ export function isStepComplete(step: string, state: PostFormState): boolean {
     case 'step3_cargo':
       return (
         state.categoryIds.length > 0 &&
+        state.categoryIds.length <= MAX_CATEGORIES &&
+        weightError(state) === null &&
         (state.priceUnit === 'NEGOTIABLE' || (toNumber(state.priceAmount) ?? 0) > 0)
       );
     case 'step4_contact':
+      // Telegram ham, telefon ham majburiy: e'lon egasiga aynan shu ikki
+      // yo'l bilan bog'lanishadi. Bittasi bo'lsa yarim kontakt bo'ladi va
+      // "Bog'lanish" bosgan odam ko'pincha javob ololmaydi.
       return (
-        state.contactTelegram.trim().length > 0 ||
-        state.contactPhone.trim().length > 0 ||
-        state.contactOther.trim().length > 0
+        state.contactTelegram.trim().length > 0 && state.contactPhone.trim().length > 0
       );
     default:
       return false;

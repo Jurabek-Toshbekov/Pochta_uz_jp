@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { EV, STEP, STEP_ORDER, type StepKey } from '../analytics/events';
 import { track } from '../analytics/track';
-import { ErrorState, Loader, StepProgress, uiStyles as styles } from '../components/primitives';
+import { ErrorState, Loader, Notice, StepProgress, uiStyles as styles } from '../components/primitives';
 import { airportsFor, useReference } from '../hooks/useReference';
 import { useDraftAutosave, useDraftRestore } from '../hooks/useDraftSync';
 import { useBackButton, useMainButton, haptic } from '../hooks/useTelegram';
@@ -32,7 +32,16 @@ export function NewPostPage() {
   const reference = useReference();
   useDraftRestore(true);
 
-  const [stepIndex, setStepIndex] = useState(0);
+  /**
+   * Server validatsiyasi xato bergan bo'lsa, forma aynan o'sha qadamdan
+   * ochiladi (PreviewPage yuboradi). Aks holda birinchi qadamdan.
+   */
+  const routed = location.state as { step?: StepKey; message?: string } | null;
+  const [stepIndex, setStepIndex] = useState(() => {
+    const index = routed?.step ? STEP_ORDER.indexOf(routed.step) : -1;
+    return index >= 0 ? index : 0;
+  });
+  const [notice, setNotice] = useState<string | null>(routed?.message ?? null);
   const step = STEP_ORDER[stepIndex] as StepKey;
 
   const stepEnteredAt = useRef<number>(Date.now());
@@ -89,6 +98,7 @@ export function NewPostPage() {
     if (!complete) {
       return;
     }
+    setNotice(null);
     haptic();
     track(EV.POST_FORM_STEP_COMPLETE, {
       step,
@@ -145,6 +155,8 @@ export function NewPostPage() {
     <div className="page">
       <StepProgress current={stepIndex + 1} total={STEP_ORDER.length} />
 
+      {notice ? <Notice>{notice}</Notice> : null}
+
       {step === STEP.TYPE ? <Step1Type /> : null}
       {step === STEP.ROUTE ? (
         <Step2Route
@@ -176,7 +188,7 @@ function hintFor(step: StepKey, t: ReturnType<typeof useT>): string {
     case STEP.CARGO:
       return t.step3.categoriesHint;
     case STEP.CONTACT:
-      return t.step4.privacyNote;
+      return t.step4.bothRequired;
     default:
       return '';
   }

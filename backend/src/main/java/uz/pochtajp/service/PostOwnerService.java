@@ -331,11 +331,14 @@ public class PostOwnerService {
             errors.add("weightKgMax", "Maksimal og'irlik minimaldan kichik bo'lmaydi.");
         }
 
-        boolean hasContact = notBlank(post.getContactPhone())
-                || notBlank(post.getContactTelegram())
-                || notBlank(post.getContactOther());
-        if (!hasContact) {
-            errors.add("contactTelegram", "Kamida bitta aloqa usulini qoldiring.");
+        // Yaratishdagi qoida bilan bir xil: ikkalasi ham qolishi kerak.
+        // Tahrir orqali kontaktni yarim qoldirib ketish yo'li ochiq bo'lsa,
+        // qoida amalda ishlamaydi.
+        if (!notBlank(post.getContactTelegram())) {
+            errors.add("contactTelegram", "Telegram username'ingizni yozing.");
+        }
+        if (!notBlank(post.getContactPhone())) {
+            errors.add("contactPhone", "Telefon raqamingizni yozing.");
         }
 
         errors.throwIfAny();

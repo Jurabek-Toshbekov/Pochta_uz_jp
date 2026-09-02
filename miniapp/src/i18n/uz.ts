@@ -13,6 +13,7 @@ export const uz = {
     loading: 'Yuklanmoqda…',
     close: 'Yopish',
     optional: 'ixtiyoriy',
+    required: 'majburiy',
     errorGeneric: 'Xatolik yuz berdi. Qayta urinib ko‘ring.',
     errorNetwork: 'Internet aloqasi yo‘q. Qayta urinib ko‘ring.',
     errorSession: 'Sessiya yaroqsiz. Ilovani yopib qaytadan oching.',
@@ -61,6 +62,9 @@ export const uz = {
     incomplete: 'Ikkala aeroportni va sanani to‘ldiring.',
     dateCarry: 'Uchish sanasi',
     dateSend: 'Qachongacha kerak',
+    selectedRoute: 'Tanlangan yo‘nalish',
+    pickOrigin: 'Chiqish aeroportini tanlang',
+    pickDest: 'Kelish aeroportini tanlang',
     flexible: 'Sanaga moslasha olaman',
     flexibleDays: 'kun',
   },
@@ -81,6 +85,8 @@ export const uz = {
     comment: 'Izoh',
     commentPlaceholder: 'Qo‘shimcha ma‘lumot',
     riskWarning: 'Diqqat',
+    categoriesLimit: 'Ko‘pi bilan 5 ta yuk turi tanlanadi.',
+    weightRange: 'Og‘irlik 0.1 kg dan 100 kg gacha bo‘ladi.',
   },
 
   step4: {
@@ -93,6 +99,10 @@ export const uz = {
     otherPlaceholder: 'WhatsApp, email…',
     privacyNote:
       'Kontaktingiz kanalda ko‘rinmaydi. Faqat «Bog‘lanish» bosilganda ochiladi.',
+    bothRequired: 'Telegram va telefon — ikkalasi ham kerak. Odam siz bilan shular orqali bog‘lanadi.',
+    noUsername: 'Telegram’ingizda username yo‘q. Telegram → Sozlamalar → Username orqali qo‘shing, keyin shu yerga yozing.',
+    phoneDenied: 'Ruxsat berilmadi. Raqamni qo‘lda yozing.',
+    phoneTaken: 'Raqam Telegram’dan olindi.',
   },
 
   preview: {
@@ -112,6 +122,7 @@ export const uz = {
       'o‘simlik va urug‘lar',
       'soxta brend mahsulotlar',
     ],
+    fixErrors: 'Ba‘zi maydonlar to‘g‘ri emas. Tuzatib, qaytadan yuboring.',
     submit: 'Kanalga yuborish',
     submitting: 'Yuborilmoqda…',
   },

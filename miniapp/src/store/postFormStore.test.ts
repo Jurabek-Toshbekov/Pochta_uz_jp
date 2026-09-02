@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  MAX_CATEGORIES,
   allChecksAccepted,
   isStepComplete,
   toCreateRequest,
   toDraftPayload,
   usePostFormStore,
+  weightError,
 } from './postFormStore';
 
 /** Formadan serverga o'tishdagi eng xatoga moyil joy — tipga o'girish (§1.5). */
@@ -131,11 +133,51 @@ describe('postFormStore', () => {
       expect(isStepComplete('step3_cargo', usePostFormStore.getState())).toBe(true);
     });
 
-    it('4-qadam: kamida bitta aloqa kerak', () => {
+    /**
+     * Telegram ham, telefon ham majburiy: bittasi bo'lsa "Bog'lanish"
+     * bosgan odam ko'pincha javob ololmaydi va bitim boshlanmaydi.
+     */
+    it('4-qadam: Telegram ham, telefon ham kerak', () => {
       expect(isStepComplete('step4_contact', usePostFormStore.getState())).toBe(false);
+
       usePostFormStore.getState().patch({ contactPhone: '+998901234567' });
+      expect(isStepComplete('step4_contact', usePostFormStore.getState())).toBe(false);
+
+      usePostFormStore.getState().patch({ contactTelegram: 'testuser' });
       expect(isStepComplete('step4_contact', usePostFormStore.getState())).toBe(true);
     });
+
+    /**
+     * Chegaradan chiqqan qiymat "Kanalga yuborish"gacha yetib bormasligi
+     * kerak: server 400 qaytaradi va butun forma qaytadan to'ldiriladi.
+     */
+    it('3-qadam: 100 kg dan og‘ir yuk o‘tkazilmaydi', () => {
+      fillValidCarry();
+      usePostFormStore.getState().patch({ weightKgMax: '111' });
+
+      expect(weightError(usePostFormStore.getState())).toBe('range');
+      expect(isStepComplete('step3_cargo', usePostFormStore.getState())).toBe(false);
+    });
+
+    it('3-qadam: maksimal og‘irlik minimaldan kichik bo‘lmaydi', () => {
+      fillValidCarry();
+      usePostFormStore.getState().patch({ weightKg: '20', weightKgMax: '5' });
+
+      expect(weightError(usePostFormStore.getState())).toBe('order');
+      expect(isStepComplete('step3_cargo', usePostFormStore.getState())).toBe(false);
+    });
+  });
+
+  it('kategoriya soni chegaradan oshmaydi (server @Size(max=5) bilan bir xil)', () => {
+    const { toggleCategory } = usePostFormStore.getState();
+    [1, 2, 3, 4, 5, 6, 7].forEach((id) => toggleCategory(id));
+
+    expect(usePostFormStore.getState().categoryIds).toHaveLength(MAX_CATEGORIES);
+    expect(usePostFormStore.getState().categoryIds).not.toContain(6);
+
+    // Tanlanganini olib tashlash baribir ishlaydi.
+    usePostFormStore.getState().toggleCategory(1);
+    expect(usePostFormStore.getState().categoryIds).not.toContain(1);
   });
 
   it('draft payloadida checklist saqlanmaydi (§7.3)', () => {
@@ -146,6 +188,13 @@ describe('postFormStore', () => {
     expect(payload).not.toHaveProperty('checks');
     expect(payload).not.toHaveProperty('formStartedAtMs');
     expect(payload.originAirport).toBe('NRT');
+  });
+
+  it('eski draftdagi ortiqcha kategoriya tiklanishda kesiladi', () => {
+    // Chegara qo'shilishidan oldin saqlangan draft.
+    usePostFormStore.getState().hydrate({ categoryIds: [1, 2, 3, 4, 5, 6, 7] });
+
+    expect(usePostFormStore.getState().categoryIds).toHaveLength(MAX_CATEGORIES);
   });
 
   it('draftdan tiklanganda checklist qaytadan belgilanadi', () => {

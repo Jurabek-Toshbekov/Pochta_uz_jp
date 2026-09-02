@@ -100,16 +100,20 @@ export function ChoiceCard({
 export function Chip({
   label,
   active,
+  disabled = false,
   onToggle,
 }: {
   label: string;
   active: boolean;
+  /** Chegaraga yetilgan tanlov — bosilmaydi, lekin ko'rinib turadi. */
+  disabled?: boolean;
   onToggle: () => void;
 }) {
   return (
     <button
       type="button"
       aria-pressed={active}
+      disabled={disabled}
       className={`${styles.chip} ${active ? styles.chipActive : ''}`}
       onClick={() => {
         haptic();

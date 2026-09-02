@@ -61,6 +61,7 @@ class PostOwnerControllerIT extends AbstractIntegrationTest {
                   "categoryIds": [1, 2],
                   "comment": "Hujjat va kiyim olib ketaman",
                   "contactTelegram": "@testuser",
+                  "contactPhone": "+998901234567",
                   "safetyChecklistOk": true
                 }""".formatted(date(7));
 
@@ -256,13 +257,27 @@ class PostOwnerControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("Yagona aloqa usulini o'chirish — 400")
-    void requiresAtLeastOneContact() throws Exception {
+    @DisplayName("Tahrirda Telegram'ni o'chirish — 400")
+    void keepsTelegramRequiredOnEdit() throws Exception {
         String postId = createPost();
 
         edit(postId, auth(), "{\"contactTelegram\": \"\"}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.contactTelegram").exists());
+    }
+
+    /** Tahrir orqali qoidani chetlab o'tish yo'li ochiq qolmasligi kerak. */
+    @Test
+    @DisplayName("Tahrirda telefonni o'chirish — 400")
+    void keepsPhoneRequiredOnEdit() throws Exception {
+        String postId = createPost();
+
+        edit(postId, auth(), "{\"contactPhone\": \"\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.contactPhone").exists());
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT contact_phone FROM posts", String.class)).isEqualTo("+998901234567");
     }
 
     @Test

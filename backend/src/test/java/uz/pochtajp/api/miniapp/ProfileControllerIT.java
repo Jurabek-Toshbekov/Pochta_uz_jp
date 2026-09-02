@@ -60,6 +60,7 @@ class ProfileControllerIT extends AbstractIntegrationTest {
                   "priceUnit": "PER_KG",
                   "categoryIds": [1],
                   "contactTelegram": "@testuser",
+                  "contactPhone": "+998901234567",
                   "safetyChecklistOk": true
                 }""".formatted(departDate);
 

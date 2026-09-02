@@ -53,6 +53,7 @@ class PostControllerIT extends AbstractIntegrationTest {
                   "categoryIds": [1, 2],
                   "comment": "Hujjat va kiyim olib ketaman",
                   "contactTelegram": "@testuser",
+                  "contactPhone": "+998901234567",
                   "safetyChecklistOk": true,
                   "platform": "ios"
                 }""".formatted(tomorrow());
@@ -180,11 +181,34 @@ class PostControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("Aloqa usuli yo'q — 400")
-    void requiresAtLeastOneContact() throws Exception {
+    @DisplayName("Telegram username yo'q — 400 (ikkalasi majburiy)")
+    void requiresTelegramUsername() throws Exception {
         submit(validCarryBody().replace("\"contactTelegram\": \"@testuser\",", ""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.contactTelegram").exists());
+    }
+
+    /**
+     * Telefon ham majburiy: bitta kanal ishlamay qolsa odam ikkinchisidan
+     * yozadi. Bitta kontakt qolsa e'lon ko'rinadi-yu bitim boshlanmaydi.
+     */
+    @Test
+    @DisplayName("Telefon yo'q — 400 (ikkalasi majburiy)")
+    void requiresPhone() throws Exception {
+        submit(validCarryBody().replace("\"contactPhone\": \"+998901234567\",", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.contactPhone").exists());
+    }
+
+    @Test
+    @DisplayName("Ikkalasi ham yo'q — ikkala maydon xatosi qaytadi")
+    void reportsBothMissingContacts() throws Exception {
+        submit(validCarryBody()
+                .replace("\"contactTelegram\": \"@testuser\",", "")
+                .replace("\"contactPhone\": \"+998901234567\",", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.contactTelegram").exists())
+                .andExpect(jsonPath("$.fieldErrors.contactPhone").exists());
     }
 
     @Test
