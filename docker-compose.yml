@@ -1,0 +1,86 @@
+# =====================================================================
+# Lokal / server uchun to'liq stek. Sirlar .env faylidan o'qiladi (§1.2).
+# Ishga tushirish:  cp .env.example .env  &&  docker compose up -d
+# =====================================================================
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pochta-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pochta}
+      POSTGRES_USER: ${POSTGRES_USER:-pochta}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env faylida ko'rsatilishi shart}
+      TZ: UTC
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pochta} -d ${POSTGRES_DB:-pochta}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    container_name: pochta-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      BOT_MODE: ${BOT_MODE:-polling}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-pochta}
+      DB_USERNAME: ${POSTGRES_USER:-pochta}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN:?BOT_TOKEN .env faylida ko'rsatilishi shart}
+      BOT_USERNAME: ${BOT_USERNAME:-uzb_jp_elon_bot}
+      CHANNEL_CHAT_ID: ${CHANNEL_CHAT_ID:-}
+      MINIAPP_URL: ${MINIAPP_URL:-}
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL:-}
+      WEBHOOK_SECRET_TOKEN: ${WEBHOOK_SECRET_TOKEN:-}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:-}
+      ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS:-}
+      ADMIN_URL: ${ADMIN_URL:-}
+      INITDATA_MAX_AGE_SECONDS: ${INITDATA_MAX_AGE_SECONDS:-86400}
+      RATE_LIMIT_POSTS_PER_DAY: ${RATE_LIMIT_POSTS_PER_DAY:-5}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  miniapp:
+    build:
+      context: ./miniapp
+      args:
+        # Vite o'zgaruvchilari build vaqtida bundle'ga tushadi — sir yozilmaydi (§1.2).
+        VITE_API_BASE_URL: ${MINIAPP_API_BASE_URL:-http://localhost:8080}
+        VITE_BOT_USERNAME: ${BOT_USERNAME:-uzb_jp_elon_bot}
+    container_name: pochta-miniapp
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${MINIAPP_PORT:-5173}:80"
+
+  admin:
+    build:
+      context: ./admin
+      args:
+        # Vite o'zgaruvchilari build vaqtida bundle'ga tushadi — sir yozilmaydi (§1.2).
+        VITE_API_BASE_URL: ${ADMIN_API_BASE_URL:-http://localhost:8080}
+    container_name: pochta-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${ADMIN_PORT:-5174}:80"
+
+volumes:
+  pgdata:

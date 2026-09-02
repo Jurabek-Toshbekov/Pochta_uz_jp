@@ -31,3 +31,18 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Sirlar — hech qachon commit qilinmaydi (CLAUDE.md §1.2) ###
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+secrets/
+
+### Node (miniapp / admin) ###
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+npm-debug.log*

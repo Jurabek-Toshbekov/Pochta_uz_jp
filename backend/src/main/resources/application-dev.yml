@@ -1,0 +1,25 @@
+# Lokal ishlab chiqish profili. Bot long polling rejimida ishlaydi (§13, 2-bosqich).
+spring:
+  config:
+    # Lokal dev qulayligi: loyiha ildizidagi `.env` fayli property manbai sifatida
+    # o'qiladi (ildizdan ham, `backend/` dan ham ishga tushirilsa ishlaydi), shuning
+    # uchun IDE'ning run configuration'iga env kiritish shart emas.
+    # Fayl bo'lmasa e'tiborsiz qoldiriladi (`optional:`).
+    # HAQIQIY environment variable bu qiymatlardan USTUN turadi (Spring precedence:
+    # OS env > config data), demak docker-compose va prod sozlamalari o'zgarmaydi.
+    # `.env` `.gitignore`da — sir repo'ga tushmaydi (§1.2).
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:../.env[.properties]
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: true
+
+bot:
+  mode: ${BOT_MODE:polling}
+
+logging:
+  level:
+    uz.pochtajp: DEBUG
+    org.flywaydb: INFO

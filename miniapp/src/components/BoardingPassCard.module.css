@@ -1,0 +1,165 @@
+/* "Boarding pass" — loyihaning yagona esda qoladigan elementi (§9.4).
+   Qolgan hamma joy jim va intizomli. */
+
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px 0;
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.type {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.status {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Yo'nalish strip'i: NRT ──✈── TAS */
+.route {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.iata {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--text-xl);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.freeCity {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.leg {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mist);
+  min-width: 40px;
+}
+
+.legLine {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.cities {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cell {
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Perforatsiya chizig'i — nuqtali border (§9.4) */
+.perforation {
+  margin: 14px -16px 0;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--line) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+.stub {
+  padding: 12px 0 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag {
+  font-size: var(--text-xs);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  color: var(--text-muted);
+}
+
+.comment {
+  padding: 0 0 14px;
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Publish muhri (hanko) — 400ms, faqat shu yerda (§9.4) */
+.stamp {
+  position: absolute;
+  right: 14px;
+  bottom: 18px;
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border: 3px solid var(--hanko);
+  border-radius: 8px;
+  color: var(--hanko);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  line-height: 1.1;
+  text-align: center;
+  transform: rotate(-8deg);
+  opacity: 0.9;
+  pointer-events: none;
+  animation: stamp var(--motion-stamp) var(--ease) both;
+}
+
+@keyframes stamp {
+  from {
+    transform: rotate(-8deg) scale(1.4);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-8deg) scale(1);
+    opacity: 0.9;
+  }
+}

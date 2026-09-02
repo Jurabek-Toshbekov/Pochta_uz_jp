@@ -1,0 +1,26 @@
+# =====================================================================
+# ngrok Traffic Policy — bepul rejadagi ogohlantirish sahifasini chetlab o'tish.
+#
+# Muammo: ngrok bepul rejasida brauzerdan kelgan HTML so'rovga
+# "You are about to visit..." sahifasi qaytadi (ERR_NGROK_6024).
+# Telegram Mini App webview'i aynan shu sahifani ko'rsatadi va ilova
+# umuman yuklanmaydi.
+#
+# Ogohlantirish `ngrok-skip-browser-warning` headeri bo'lsa chiqmaydi,
+# lekin top-level navigatsiyaga header qo'shib bo'lmaydi — Telegram
+# oddiy GET yuboradi. Shuning uchun header ngrok'ning o'z chekkasida,
+# so'rov ilovaga yetib bormasdan qo'shiladi.
+#
+# Ishlatish:
+#   ngrok http 5173 --traffic-policy-file scripts/ngrok-skip-warning.yml
+#
+# Eslatma: bu ngrok tarifini o'zgartirmaydi, faqat ogohlantirishni
+# o'chiradi. Doimiy yechim — cloudflared yoki pullik ngrok.
+# =====================================================================
+
+on_http_request:
+  - actions:
+      - type: add-headers
+        config:
+          headers:
+            ngrok-skip-browser-warning: "true"
