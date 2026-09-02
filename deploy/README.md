@@ -13,7 +13,7 @@ Amaldagi manzillar (2026-09-02 holati):
 | Nima | Qayerda |
 |---|---|
 | Backend API | `https://api99.e-tex.uz` (VPS `169.58.233.232`) |
-| Mini App | Netlify |
+| Mini App | `https://pochta-jp-uz.netlify.app` |
 | Kanal | `@jpuzbpochta` (`-1001424117981`) |
 | Bot | `@uzb_jp_elon_bot` |
 
@@ -98,7 +98,7 @@ BOT_MINIAPP_SHORT_NAME=app
 CHANNEL_CHAT_ID=-1001424117981
 CHANNEL_USERNAME=jpuzbpochta
 
-MINIAPP_URL=https://<netlify-manzil>    # CORS ro'yxatiga aynan shu tushadi
+MINIAPP_URL=https://pochta-jp-uz.netlify.app   # CORS ro'yxatiga aynan shu tushadi
 BOT_MODE=webhook
 WEBHOOK_BASE_URL=https://api99.e-tex.uz
 WEBHOOK_SECRET_TOKEN=<openssl rand -hex 32>
@@ -147,21 +147,46 @@ tomonidan o'zi ro'yxatdan o'tadi.
 
 ## 7. Netlify
 
-`netlify.toml` repo ildizida (`base = "miniapp"`, `publish = "dist"`,
-Node 22). Netlify UI'da repo ulanadi, so'ng bitta env qo'shiladi:
+Sayt: `pochta-jp-uz` -> `https://pochta-jp-uz.netlify.app`
 
+`netlify.toml` repo ildizida (`base = "miniapp"`, `publish = "dist"`,
+Node 22).
+
+**`VITE_API_BASE_URL` SAYTNING env'ida turishi shart** — lokal build
+paytida `VITE_API_BASE_URL=... npm run build` deb berish YETARLI EMAS:
+
+```bash
+netlify env:set VITE_API_BASE_URL https://api99.e-tex.uz --site <site-id>
 ```
-VITE_API_BASE_URL = https://api99.e-tex.uz
+
+> Nima uchun. `netlify deploy --dir dist` tayyor papkani yuklaydi deb
+> o'ylanadi, lekin repoda `netlify.toml` bo'lsa Netlify **o'zi qayta
+> quradi** ("Netlify Build Complete" deb yozadi). Uning build muhitida
+> lokal env o'zgaruvchi yo'q, natijada bundle ichida API manzili bo'sh
+> qoladi va so'rovlar Netlify domeniga ketadi -> 404 -> Mini App
+> "Sessiya yaroqsiz" beradi. Server loglarida esa hech narsa
+> ko'rinmaydi, chunki so'rov unga yetib bormaydi. Aynan shu tuzoqqa bir
+> marta tushilgan.
+
+Tekshirish: jonli bundle ichida manzil borligiga ishonch hosil qilish.
+
+```bash
+JS=$(curl -s https://pochta-jp-uz.netlify.app/ | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)
+curl -s "https://pochta-jp-uz.netlify.app$JS" | grep -o 'https://api99.e-tex.uz'
 ```
 
 `HashRouter` ishlatilgani uchun SPA rewrite qoidasi kerak emas.
 `X-Frame-Options` **qo'yilmaydi** — Mini App Telegram webview ichida
 ochiladi va u sarlavha ilovani butunlay bloklaydi.
 
+Avtomatik qayta qurish uchun Netlify UI'da repo ulanadi
+(`Site configuration -> Build & deploy -> Link repository`). Aks holda
+har o'zgarishda qo'lda `netlify deploy --prod --dir dist` kerak.
+
 ## 8. BotFather
 
 `/newapp` → `@uzb_jp_elon_bot` → rasm 640×360, GIF uchun `/empty`,
-Web App URL = Netlify manzili, **Short name: `app`**.
+Web App URL = `https://pochta-jp-uz.netlify.app`, **Short name: `app`**.
 
 Shundan keyin kanaldagi `t.me/uzb_jp_elon_bot/app?startapp=ch_<id>`
 havolasi ishlaydi.
