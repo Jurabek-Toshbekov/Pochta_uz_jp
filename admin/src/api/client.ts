@@ -45,7 +45,12 @@ export const tokenStore = {
   refresh(): string | null {
     return safeRead(REFRESH_KEY);
   },
-  save(login: LoginResponse): void {
+  /**
+   * Faqat ikkita token kerak — qolgan maydonlar (rol, muddat) saqlanmaydi,
+   * chunki ular har so'rovda bazadan qayta tekshiriladi. Shu sabab tur
+   * `LoginResponse` emas, uning kerakli bo'lagi.
+   */
+  save(login: Pick<LoginResponse, 'accessToken' | 'refreshToken'>): void {
     safeWrite(ACCESS_KEY, login.accessToken);
     safeWrite(REFRESH_KEY, login.refreshToken);
   },
