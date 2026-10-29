@@ -77,13 +77,52 @@ public class AdminPostService {
         this.eventLogger = eventLogger;
     }
 
+    /** Ro'yxatni saralash. Ruxsat etilgan qiymatlar shu yerda — SQL'ga faqat shular tushadi. */
+    public enum Sort {
+        /** PENDING va HIGH risk tepada (§11.2), keyin yangilari. */
+        PRIORITY(" ORDER BY (p.status = 'PENDING') DESC, (coalesce(cat.max_risk, 'LOW') = 'HIGH') DESC,"
+                + " p.created_at DESC"),
+        NEWEST(" ORDER BY p.created_at DESC"),
+        OLDEST(" ORDER BY p.created_at ASC"),
+        VIEWS(" ORDER BY p.view_count DESC, p.created_at DESC"),
+        REVEALS(" ORDER BY p.contact_reveal_count DESC, p.created_at DESC"),
+        REPORTS(" ORDER BY coalesce(rep.report_count, 0) DESC, p.created_at DESC"),
+        TRAVEL_DATE(" ORDER BY coalesce(p.depart_date, p.deadline_date) ASC NULLS LAST, p.created_at DESC");
+
+        private final String sql;
+
+        Sort(String sql) {
+            this.sql = sql;
+        }
+
+        static Sort parse(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return PRIORITY;
+            }
+            try {
+                return valueOf(raw.strip().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new ValidationException("Saralash turi noto'g'ri.", Map.of("sort", raw));
+            }
+        }
+    }
+
     /** Ro'yxat filtri. Bo'sh maydon — cheklov yo'q. */
     public record Filter(String status, String postType, String direction, String search,
-                         Boolean highRiskFirst, int page, int size) {
+                         String originAirport, String destAirport, Short categoryId, String riskLevel,
+                         boolean reportedOnly, UUID userId, LocalDate createdFrom, LocalDate createdTo,
+                         Sort sort, int page, int size) {
 
         public Filter {
             page = Math.max(0, page);
             size = size <= 0 || size > MAX_PAGE_SIZE ? 25 : size;
+            sort = sort == null ? Sort.PRIORITY : sort;
+        }
+
+        public static Sort sortOf(String raw, boolean priorityFirst) {
+            return raw == null || raw.isBlank()
+                    ? (priorityFirst ? Sort.PRIORITY : Sort.NEWEST)
+                    : Sort.parse(raw);
         }
     }
 
@@ -93,8 +132,6 @@ public class AdminPostService {
 
     @Transactional(readOnly = true)
     public AdminDto.Page<AdminDto.PostRow> list(Filter filter) {
-        StringBuilder where = new StringBuilder(" WHERE p.deleted_at IS NULL");
-
         // Aniq e'lon ko'rsatilgan bo'lsa (ID, deep link, kanal havolasi) — holat va
         // tur filtrlari e'tiborga olinmaydi: admin aynan shu e'lonni qidiryapti.
         String search = filter.search() == null ? "" : filter.search().strip();
@@ -109,43 +146,63 @@ public class AdminPostService {
                     List.of(Long.parseLong(linkMatch.group(1))), filter);
         }
 
+        StringBuilder where = new StringBuilder(" WHERE p.deleted_at IS NULL");
         List<Object> args = new ArrayList<>();
-        if (filter.status() != null && !filter.status().isBlank()) {
-            where.append(" AND p.status = ?");
-            args.add(filter.status());
+        equal(where, args, "p.status", filter.status());
+        equal(where, args, "p.post_type", filter.postType());
+        equal(where, args, "p.direction", filter.direction());
+        equal(where, args, "p.origin_airport", upper(filter.originAirport()));
+        equal(where, args, "p.dest_airport", upper(filter.destAirport()));
+        equal(where, args, "coalesce(cat.max_risk, 'LOW')", upper(filter.riskLevel()));
+        if (filter.categoryId() != null) {
+            where.append(" AND EXISTS (SELECT 1 FROM post_categories pc"
+                    + " WHERE pc.post_id = p.id AND pc.category_id = ?)");
+            args.add(filter.categoryId());
         }
-        if (filter.postType() != null && !filter.postType().isBlank()) {
-            where.append(" AND p.post_type = ?");
-            args.add(filter.postType());
+        if (filter.reportedOnly()) {
+            where.append(" AND coalesce(rep.report_count, 0) > 0");
         }
-        if (filter.direction() != null && !filter.direction().isBlank()) {
-            where.append(" AND p.direction = ?");
-            args.add(filter.direction());
+        if (filter.userId() != null) {
+            where.append(" AND p.user_id = ?");
+            args.add(filter.userId());
         }
-        if (filter.search() != null && !filter.search().isBlank()) {
-            // Foydalanuvchi nomi yoki yo'nalish kodi bo'yicha.
-            where.append(" AND (u.username ILIKE ? OR p.origin_airport = upper(?) OR p.dest_airport = upper(?))");
-            String like = "%" + filter.search().strip() + "%";
+        if (filter.createdFrom() != null) {
+            where.append(" AND p.created_at >= ?::date");
+            args.add(filter.createdFrom());
+        }
+        if (filter.createdTo() != null) {
+            // "gacha" kun ham kiradi.
+            where.append(" AND p.created_at < ?::date + 1");
+            args.add(filter.createdTo());
+        }
+        if (!search.isEmpty()) {
+            // Foydalanuvchi nomi (username yoki ism) yoki yo'nalish kodi bo'yicha.
+            where.append(" AND (u.username ILIKE ? OR concat_ws(' ', u.first_name, u.last_name) ILIKE ?"
+                    + " OR p.origin_airport = upper(?) OR p.dest_airport = upper(?))");
+            String like = "%" + search.replace("@", "") + "%";
             args.add(like);
-            args.add(filter.search().strip());
-            args.add(filter.search().strip());
+            args.add(like);
+            args.add(search);
+            args.add(search);
         }
         return page(where, args, filter);
     }
 
-    private AdminDto.Page<AdminDto.PostRow> page(StringBuilder where, List<Object> args, Filter filter) {
-        Long total = jdbc.queryForObject(
-                "SELECT count(*) FROM posts p JOIN users u ON u.id = p.user_id" + where,
-                Long.class, args.toArray());
+    private static void equal(StringBuilder where, List<Object> args, String column, String value) {
+        if (value != null && !value.isBlank()) {
+            where.append(" AND ").append(column).append(" = ?");
+            args.add(value.strip());
+        }
+    }
 
-        // PENDING va HIGH risk tepada (§11.2), keyin yangilari.
-        String order = Boolean.FALSE.equals(filter.highRiskFirst())
-                ? " ORDER BY p.created_at DESC"
-                : """
-                   ORDER BY (p.status = 'PENDING') DESC,
-                            (max_risk = 'HIGH') DESC,
-                            p.created_at DESC
-                  """;
+    private static String upper(String value) {
+        return value == null ? null : value.strip().toUpperCase();
+    }
+
+    private AdminDto.Page<AdminDto.PostRow> page(StringBuilder where, List<Object> args, Filter filter) {
+        Long total = jdbc.queryForObject("SELECT count(*)" + LIST_FROM + where, Long.class, args.toArray());
+
+        String order = filter.sort().sql;
 
         List<Object> pageArgs = new ArrayList<>(args);
         pageArgs.add(filter.size());
@@ -157,7 +214,7 @@ public class AdminPostService {
         return AdminDto.Page.of(items, total == null ? 0 : total, filter.page(), filter.size());
     }
 
-    private static final String LIST_SELECT = """
+    private static final String LIST_COLUMNS = """
             SELECT p.id, p.created_at, p.published_at, p.status, p.post_type, p.direction,
                    p.origin_airport, p.dest_airport, p.depart_date, p.deadline_date,
                    p.price_amount, p.price_currency, p.price_unit, p.weight_kg,
@@ -166,6 +223,9 @@ public class AdminPostService {
                    coalesce(cat.titles, ARRAY[]::text[])   AS categories,
                    coalesce(cat.max_risk, 'LOW')           AS max_risk,
                    coalesce(rep.report_count, 0)           AS report_count
+            """;
+
+    private static final String LIST_FROM = """
             FROM posts p
             JOIN users u ON u.id = p.user_id
             LEFT JOIN (
@@ -182,6 +242,8 @@ public class AdminPostService {
                 WHERE post_id IS NOT NULL GROUP BY post_id
             ) rep ON rep.post_id = p.id
             """;
+
+    private static final String LIST_SELECT = LIST_COLUMNS + LIST_FROM;
 
     private RowMapper<AdminDto.PostRow> postRowMapper() {
         return (rs, i) -> {

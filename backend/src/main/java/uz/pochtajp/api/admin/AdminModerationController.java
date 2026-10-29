@@ -1,7 +1,9 @@
 package uz.pochtajp.api.admin;
 
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +14,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uz.pochtajp.api.admin.dto.AdminDto;
 import uz.pochtajp.api.admin.dto.AdminRequests;
+import uz.pochtajp.api.miniapp.dto.ReferenceResponse;
 import uz.pochtajp.security.CurrentAdmin;
 import uz.pochtajp.service.AdminPostService;
 import uz.pochtajp.service.AdminReportService;
+import uz.pochtajp.service.AdminUserAnalyticsService;
 import uz.pochtajp.service.AdminUserService;
+import uz.pochtajp.service.ReferenceService;
 
 /**
  * Moderatsiya: e'lonlar, foydalanuvchilar, shikoyatlar (§11.2, §12).
@@ -31,13 +36,19 @@ public class AdminModerationController {
     private final AdminPostService postService;
     private final AdminUserService userService;
     private final AdminReportService reportService;
+    private final AdminUserAnalyticsService userAnalyticsService;
+    private final ReferenceService referenceService;
 
     public AdminModerationController(AdminPostService postService,
                                      AdminUserService userService,
-                                     AdminReportService reportService) {
+                                     AdminReportService reportService,
+                                     AdminUserAnalyticsService userAnalyticsService,
+                                     ReferenceService referenceService) {
         this.postService = postService;
         this.userService = userService;
         this.reportService = reportService;
+        this.userAnalyticsService = userAnalyticsService;
+        this.referenceService = referenceService;
     }
 
     // ------------------------------------------------------------------
@@ -50,11 +61,27 @@ public class AdminModerationController {
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String direction,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String origin,
+            @RequestParam(required = false) String dest,
+            @RequestParam(required = false) Short category,
+            @RequestParam(required = false) String risk,
+            @RequestParam(required = false, defaultValue = "false") boolean reportedOnly,
+            @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String sort,
             @RequestParam(required = false, defaultValue = "true") boolean priorityFirst,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size) {
         return postService.list(new AdminPostService.Filter(
-                status, type, direction, search, priorityFirst, page, size));
+                status, type, direction, search, origin, dest, category, risk, reportedOnly, userId,
+                from, to, AdminPostService.Filter.sortOf(sort, priorityFirst), page, size));
+    }
+
+    /** Filtr ro'yxatlari uchun: aeroportlar va kategoriyalar (Mini App bilan bir manba). */
+    @GetMapping("/reference")
+    public ReferenceResponse reference() {
+        return referenceService.load();
     }
 
     @GetMapping("/posts/{postId}")
@@ -101,6 +128,12 @@ public class AdminModerationController {
     @GetMapping("/users/{userId}")
     public AdminDto.UserDetail user(@PathVariable UUID userId) {
         return userService.detail(userId);
+    }
+
+    /** Bitta foydalanuvchining to'liq analitikasi — profil sahifasi uchun. */
+    @GetMapping("/users/{userId}/analytics")
+    public AdminDto.UserAnalytics userAnalytics(@PathVariable UUID userId) {
+        return userAnalyticsService.analytics(userId, CurrentAdmin.requireId());
     }
 
     @PostMapping("/users/{userId}/block")

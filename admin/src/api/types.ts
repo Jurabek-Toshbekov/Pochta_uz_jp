@@ -106,6 +106,153 @@ export interface UserDetail {
   recentEvents: EventRow[];
 }
 
+/* --- Foydalanuvchi analitikasi (/users/{id}/analytics) --- */
+
+export interface UserOrigin {
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  referralSource: string | null;
+  languageCode: string | null;
+  uiLanguage: string | null;
+  telegramPremium: boolean;
+  phoneVerified: boolean;
+  consentTosAt: string | null;
+  consentPrivacyAt: string | null;
+  platforms: string[];
+  firstEvent: EventRow | null;
+}
+
+export interface UserTotals {
+  events: number;
+  sessions: number;
+  activeDays: number;
+  postsCreated: number;
+  postsPublished: number;
+  searches: number;
+  zeroResultSearches: number;
+  postsViewed: number;
+  viewsReceived: number;
+  uniqueViewers: number;
+  revealsMade: number;
+  revealsReceived: number;
+  reportsMade: number;
+  reportsReceived: number;
+  reviewsReceived: number;
+  avgRatingReceived: number | null;
+  activeSubscriptions: number;
+}
+
+export interface DailyCount {
+  date: string;
+  count: number;
+}
+
+export interface EventCount {
+  eventName: string;
+  count: number;
+  lastAt: string | null;
+}
+
+export interface OwnPost {
+  id: string;
+  createdAt: string | null;
+  status: PostStatus;
+  postType: 'SEND' | 'CARRY';
+  originAirport: string | null;
+  destAirport: string | null;
+  travelDate: string | null;
+  viewCount: number;
+  uniqueViewers: number;
+  contactRevealCount: number;
+}
+
+export interface ViewedPost {
+  postId: string;
+  postType: 'SEND' | 'CARRY';
+  originAirport: string | null;
+  destAirport: string | null;
+  status: PostStatus;
+  ownerId: string;
+  ownerUsername: string | null;
+  ownerDisplayName: string | null;
+  views: number;
+  contactRevealed: boolean;
+  lastViewedAt: string | null;
+}
+
+export interface Viewer {
+  userId: string;
+  username: string | null;
+  displayName: string | null;
+  postsViewed: number;
+  views: number;
+  contactReveals: number;
+  lastViewedAt: string | null;
+}
+
+export interface SearchRow {
+  createdAt: string;
+  postType: string | null;
+  direction: string | null;
+  originAirport: string | null;
+  destAirport: string | null;
+  dateFrom: string | null;
+  dateTo: string | null;
+  textQuery: string | null;
+  resultCount: number;
+}
+
+export interface UserAnalytics {
+  row: UserRow;
+  blockedReason: string | null;
+  origin: UserOrigin;
+  totals: UserTotals;
+  activity: DailyCount[];
+  eventBreakdown: EventCount[];
+  posts: OwnPost[];
+  viewedPosts: ViewedPost[];
+  viewers: Viewer[];
+  searches: SearchRow[];
+  timeline: EventRow[];
+}
+
+/* --- Reference (filtrlar uchun) --- */
+
+export interface ReferenceAirport {
+  code: string;
+  countryCode: string;
+  cityUz: string;
+}
+
+export interface ReferenceCategory {
+  id: number;
+  code: string;
+  titleUz: string;
+  emoji: string | null;
+}
+
+export interface Reference {
+  airports: ReferenceAirport[];
+  categories: ReferenceCategory[];
+}
+
+/** Moderatsiya ro'yxati filtri — URL so'rov qatori bilan bir xil kalitlar. */
+export type PostFilters = {
+  status: string;
+  type: string;
+  direction: string;
+  search: string;
+  origin: string;
+  dest: string;
+  category: string;
+  risk: string;
+  reportedOnly: string;
+  userId: string;
+  from: string;
+  to: string;
+  sort: string;
+};
+
 export interface ReportRow {
   id: string;
   reason: string;

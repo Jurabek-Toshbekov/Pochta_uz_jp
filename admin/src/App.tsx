@@ -10,6 +10,7 @@ import { PostsPage } from './pages/PostsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SearchInsightsPage } from './pages/SearchInsightsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { UserDetailPage } from './pages/UserDetailPage';
 import { UsersPage } from './pages/UsersPage';
 
 /**
@@ -29,6 +30,7 @@ export function App() {
         <Route path="/" element={<OverviewPage />} />
         <Route path="/posts" element={<PostsPage />} />
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/users/:userId" element={<UserDetailPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/search-insights" element={<SearchInsightsPage />} />

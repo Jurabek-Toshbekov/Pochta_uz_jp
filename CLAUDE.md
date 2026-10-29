@@ -985,7 +985,10 @@ POST   /auth/refresh               access muddati tugaganda
 
 GET    /overview                   KPI to'plami
 
-GET    /posts                      ?status=&type=&direction=&search=&page=&size=
+GET    /posts                      ?status=&type=&direction=&search=&origin=&dest=&category=&risk=
+                                   &reportedOnly=&userId=&from=&to=&sort=&page=&size=
+                                   (search'da e'lon ID/havolasi bo'lsa boshqa filtrlar e'tiborsiz)
+GET    /reference                  filtrlar uchun aeroport va kategoriyalar
 GET    /posts/{id}                 tafsilot (telefon maskalangan)
 POST   /posts/{id}/approve         tasdiqlash -> kanalga chiqadi
 POST   /posts/{id}/reject          sabab majburiy
@@ -994,6 +997,7 @@ PATCH  /posts/{id}                 matn maydonlarini tahrirlash
 
 GET    /users                      ?search=&role=&status=&page=&size=
 GET    /users/{id}                 profil + event lentasi
+GET    /users/{id}/analytics       to'liq profil: kelib chiqishi, faollik, kim kimni ko'rgan (audit'ga yoziladi)
 POST   /users/{id}/block           sabab majburiy
 POST   /users/{id}/unblock
 POST   /users/{id}/verify          NONE | PHONE | DOCUMENT

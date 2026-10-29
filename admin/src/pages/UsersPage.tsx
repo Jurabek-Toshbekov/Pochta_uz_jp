@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiRequestError } from '../api/client';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { api } from '../api/endpoints';
-import { Card, EmptyState, ErrorState, Loader, Pager, Select, StatusBadge } from '../components/ui';
-import { formatDate, formatDateTime, formatNumber } from '../lib/format';
+import { EmptyState, ErrorState, Loader, Pager, Select, StatusBadge } from '../components/ui';
+import { formatDate, formatNumber } from '../lib/format';
 
 /**
  * Foydalanuvchilar (§11.2 — /users).
  *
- * <p>Ro'yxatda telefon yo'q (§1.7). Profil sahifasida esa event lentasi
- * bor — shikoyatni tekshirishda odam nima qilganini ko'rish kerak.
+ * <p>Ro'yxatda telefon yo'q (§1.7). Har bir qatordan to'liq analitika
+ * sahifasiga o'tiladi (/users/:userId).
  */
 
 const ROLE_OPTIONS = [
@@ -26,18 +26,11 @@ const STATUS_OPTIONS = [
   { value: 'BLOCKED', label: 'Bloklangan' },
 ];
 
-const VERIFICATION_OPTIONS = [
-  { value: 'NONE', label: 'Tasdiqlanmagan' },
-  { value: 'PHONE', label: 'Telefon' },
-  { value: 'DOCUMENT', label: 'Hujjat' },
-];
-
 export function UsersPage() {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
 
   const size = 25;
   const list = useQuery({
@@ -90,7 +83,9 @@ export function UsersPage() {
               <tbody>
                 {list.data.items.map((row) => (
                   <tr key={row.id}>
-                    <td>{row.username ? `@${row.username}` : row.displayName ?? '—'}</td>
+                    <td>
+                      <Link to={`/users/${row.id}`}>{row.username ? `@${row.username}` : row.displayName ?? '—'}</Link>
+                    </td>
                     <td className="num">{row.telegramId}</td>
                     <td>{row.role}</td>
                     <td><StatusBadge status={row.status} /></td>
@@ -100,7 +95,7 @@ export function UsersPage() {
                     <td className="num">{formatNumber(row.trustScore)}</td>
                     <td className="mono">{formatDate(row.lastSeenAt)}</td>
                     <td>
-                      <button type="button" onClick={() => setSelected(row.id)}>Profil</button>
+                      <Link to={`/users/${row.id}`}>Analitika →</Link>
                     </td>
                   </tr>
                 ))}
@@ -112,170 +107,6 @@ export function UsersPage() {
         </>
       )}
 
-      {selected && <UserProfile userId={selected} onClose={() => setSelected(null)} />}
     </>
-  );
-}
-
-function UserProfile({ userId, onClose }: { userId: string; onClose: () => void }) {
-  const client = useQueryClient();
-  const [reason, setReason] = useState('');
-  const [level, setLevel] = useState('PHONE');
-  const [error, setError] = useState<string | null>(null);
-
-  const detail = useQuery({ queryKey: ['admin-user', userId], queryFn: () => api.user(userId) });
-
-  const invalidate = () => {
-    void client.invalidateQueries({ queryKey: ['admin-users'] });
-    void client.invalidateQueries({ queryKey: ['admin-user', userId] });
-  };
-
-  const block = useMutation({
-    mutationFn: () => api.blockUser(userId, reason),
-    onSuccess: () => {
-      setReason('');
-      invalidate();
-    },
-    onError: (cause) => setError(cause instanceof ApiRequestError ? cause.message : 'Bajarilmadi.'),
-  });
-
-  const unblock = useMutation({
-    mutationFn: () => api.unblockUser(userId),
-    onSuccess: invalidate,
-    onError: (cause) => setError(cause instanceof ApiRequestError ? cause.message : 'Bajarilmadi.'),
-  });
-
-  const verify = useMutation({
-    mutationFn: () => api.verifyUser(userId, level),
-    onSuccess: invalidate,
-    onError: (cause) => setError(cause instanceof ApiRequestError ? cause.message : 'Bajarilmadi.'),
-  });
-
-  if (detail.isLoading) {
-    return <Card title="Profil"><Loader /></Card>;
-  }
-  if (detail.isError || !detail.data) {
-    return (
-      <Card title="Profil">
-        <ErrorState message="Profil yuklanmadi." onRetry={() => void detail.refetch()} />
-      </Card>
-    );
-  }
-
-  const user = detail.data;
-
-  return (
-    <div style={{ marginTop: 16 }}>
-      <Card
-        title={user.row.username ? `@${user.row.username}` : 'Profil'}
-        actions={<button type="button" onClick={onClose}>Yopish</button>}
-      >
-        <div className="kpi-grid">
-          <div className="card">
-            <div className="kpi__label">Chiqarilgan e'lonlar</div>
-            <div className="kpi__value">{formatNumber(user.publishedCount)}</div>
-          </div>
-          <div className="card">
-            <div className="kpi__label">Kontakt ochgan</div>
-            <div className="kpi__value">{formatNumber(user.revealsMade)}</div>
-          </div>
-          <div className="card">
-            <div className="kpi__label">Kontakti ochilgan</div>
-            <div className="kpi__value">{formatNumber(user.revealsReceived)}</div>
-          </div>
-          <div className="card">
-            <div className="kpi__label">Trust score</div>
-            <div className="kpi__value">{formatNumber(user.row.trustScore)}</div>
-          </div>
-        </div>
-
-        {user.blockedReason && <p className="error">Bloklash sababi: {user.blockedReason}</p>}
-
-        <div className="toolbar">
-          {user.row.status === 'BLOCKED' ? (
-            <button type="button" disabled={unblock.isPending} onClick={() => unblock.mutate()}>
-              Blokdan chiqarish
-            </button>
-          ) : (
-            <>
-              <input
-                placeholder="Bloklash sababi"
-                value={reason}
-                aria-label="Bloklash sababi"
-                onChange={(event) => setReason(event.target.value)}
-                style={{ minWidth: 220 }}
-              />
-              <button
-                type="button"
-                className="danger"
-                disabled={reason.trim().length === 0 || block.isPending}
-                onClick={() => block.mutate()}
-              >
-                Bloklash
-              </button>
-            </>
-          )}
-
-          <Select label="Tasdiq" value={level} options={VERIFICATION_OPTIONS} onChange={setLevel} />
-          <button type="button" disabled={verify.isPending} onClick={() => verify.mutate()}>
-            Darajani o‘rnatish
-          </button>
-        </div>
-
-        {error && <p className="error">{error}</p>}
-
-        <div className="grid-2" style={{ marginTop: 16 }}>
-          <div>
-            <h2>Oxirgi e'lonlar</h2>
-            <div className="table-wrap" style={{ marginTop: 8 }}>
-              <table className="data">
-                <thead>
-                  <tr>
-                    <th>Sana</th>
-                    <th>Holat</th>
-                    <th>Yo‘nalish</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {user.recentPosts.map((post) => (
-                    <tr key={post.id}>
-                      <td className="mono">{formatDate(post.createdAt)}</td>
-                      <td><StatusBadge status={post.status} /></td>
-                      <td className="iata">{post.originAirport ?? '—'} → {post.destAirport ?? '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {user.recentPosts.length === 0 && <EmptyState text="E'lon bermagan." />}
-            </div>
-          </div>
-
-          <div>
-            <h2>Harakatlar lentasi</h2>
-            <div className="table-wrap" style={{ marginTop: 8, maxHeight: 320, overflowY: 'auto' }}>
-              <table className="data">
-                <thead>
-                  <tr>
-                    <th>Vaqt</th>
-                    <th>Event</th>
-                    <th>Manba</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {user.recentEvents.map((event, index) => (
-                    <tr key={`${event.eventName}-${index}`}>
-                      <td className="mono">{formatDateTime(event.occurredAt)}</td>
-                      <td className="mono">{event.eventName}</td>
-                      <td className="muted">{event.source}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {user.recentEvents.length === 0 && <EmptyState text="Hali harakat yozilmagan." />}
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
   );
 }

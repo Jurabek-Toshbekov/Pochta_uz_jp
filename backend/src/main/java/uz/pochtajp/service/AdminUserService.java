@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,12 +142,18 @@ public class AdminUserService {
                 instant(rs.getTimestamp("created_at")));
     }
 
-    @Transactional(readOnly = true)
-    public AdminDto.UserDetail detail(UUID userId) {
+    /** Ro'yxatdagi ko'rinishdagi bitta qator (analitika sahifasi ham ishlatadi). */
+    AdminDto.UserRow row(UUID userId) {
         List<AdminDto.UserRow> rows = jdbc.query(LIST_SELECT + " WHERE u.id = ?", userRowMapper(), userId);
         if (rows.isEmpty()) {
             throw new NotFoundException("Foydalanuvchi topilmadi.");
         }
+        return rows.get(0);
+    }
+
+    @Transactional(readOnly = true)
+    public AdminDto.UserDetail detail(UUID userId) {
+        AdminDto.UserRow row = row(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Foydalanuvchi topilmadi."));
 
@@ -159,25 +166,41 @@ public class AdminUserService {
 
         List<AdminDto.PostRow> recentPosts = postsOfUser(userId);
 
-        List<AdminDto.EventRow> events = jdbc.query("""
-                SELECT event_name, source, properties, occurred_at
-                FROM events WHERE user_id = ?
-                ORDER BY occurred_at DESC LIMIT ?
-                """,
-                (rs, i) -> new AdminDto.EventRow(
-                        rs.getString("event_name"),
-                        rs.getString("source"),
-                        readProperties(rs.getString("properties")),
-                        instant(rs.getTimestamp("occurred_at"))),
-                userId, RECENT_EVENTS);
+        List<AdminDto.EventRow> events = recentEvents(userId, RECENT_EVENTS);
 
         return new AdminDto.UserDetail(
-                rows.get(0),
+                row,
                 user.getUiLanguage(),
                 user.getBlockedReason(),
                 user.getPhoneVerifiedAt() != null,
                 publishedCount, revealsMade, revealsReceived,
                 recentPosts, events);
+    }
+
+    /** Oxirgi harakatlar, yangisi birinchi. */
+    List<AdminDto.EventRow> recentEvents(UUID userId, int limit) {
+        return jdbc.query("""
+                SELECT event_name, source, properties, occurred_at
+                FROM events WHERE user_id = ?
+                ORDER BY occurred_at DESC LIMIT ?
+                """, eventRowMapper(), userId, limit);
+    }
+
+    /** Eng birinchi yozilgan harakat — odam qanday kirib kelganini ko'rsatadi. */
+    Optional<AdminDto.EventRow> firstEvent(UUID userId) {
+        return jdbc.query("""
+                SELECT event_name, source, properties, occurred_at
+                FROM events WHERE user_id = ?
+                ORDER BY occurred_at ASC LIMIT 1
+                """, eventRowMapper(), userId).stream().findFirst();
+    }
+
+    private RowMapper<AdminDto.EventRow> eventRowMapper() {
+        return (rs, i) -> new AdminDto.EventRow(
+                rs.getString("event_name"),
+                rs.getString("source"),
+                readProperties(rs.getString("properties")),
+                instant(rs.getTimestamp("occurred_at")));
     }
 
     private List<AdminDto.PostRow> postsOfUser(UUID userId) {

@@ -120,6 +120,125 @@ public final class AdminDto {
     ) {
     }
 
+    // ------------------------------------------------------------------
+    // Foydalanuvchi analitikasi (/users/{id}/analytics)
+    // ------------------------------------------------------------------
+
+    /** Bitta foydalanuvchi haqida hamma narsa — profil sahifasi shu bilan quriladi. */
+    public record UserAnalytics(
+            UserRow row,
+            String blockedReason,
+            UserOrigin origin,
+            UserTotals totals,
+            List<DailyCount> activity,
+            List<EventCount> eventBreakdown,
+            List<OwnPost> posts,
+            List<ViewedPost> viewedPosts,
+            List<Viewer> viewers,
+            List<SearchRow> searches,
+            List<EventRow> timeline
+    ) {
+    }
+
+    /** Qachon va qayerdan kelgan. */
+    public record UserOrigin(
+            Instant firstSeenAt,
+            Instant lastSeenAt,
+            String referralSource,
+            String languageCode,
+            String uiLanguage,
+            boolean telegramPremium,
+            boolean phoneVerified,
+            Instant consentTosAt,
+            Instant consentPrivacyAt,
+            List<String> platforms,
+            EventRow firstEvent
+    ) {
+    }
+
+    public record UserTotals(
+            long events,
+            long sessions,
+            long activeDays,
+            long postsCreated,
+            long postsPublished,
+            long searches,
+            long zeroResultSearches,
+            long postsViewed,
+            long viewsReceived,
+            long uniqueViewers,
+            long revealsMade,
+            long revealsReceived,
+            long reportsMade,
+            long reportsReceived,
+            long reviewsReceived,
+            BigDecimal avgRatingReceived,
+            long activeSubscriptions
+    ) {
+    }
+
+    public record DailyCount(LocalDate date, long count) {
+    }
+
+    public record EventCount(String eventName, long count, Instant lastAt) {
+    }
+
+    /** Foydalanuvchining o'z e'loni + kim ko'rgani. */
+    public record OwnPost(
+            UUID id,
+            Instant createdAt,
+            String status,
+            String postType,
+            String originAirport,
+            String destAirport,
+            LocalDate travelDate,
+            int viewCount,
+            long uniqueViewers,
+            int contactRevealCount
+    ) {
+    }
+
+    /** Foydalanuvchi ko'rgan boshqa odamning e'loni. */
+    public record ViewedPost(
+            UUID postId,
+            String postType,
+            String originAirport,
+            String destAirport,
+            String status,
+            UUID ownerId,
+            String ownerUsername,
+            String ownerDisplayName,
+            long views,
+            boolean contactRevealed,
+            Instant lastViewedAt
+    ) {
+    }
+
+    /** Foydalanuvchining e'lonlarini ko'rgan odam. */
+    public record Viewer(
+            UUID userId,
+            String username,
+            String displayName,
+            long postsViewed,
+            long views,
+            long contactReveals,
+            Instant lastViewedAt
+    ) {
+    }
+
+    public record SearchRow(
+            Instant createdAt,
+            String postType,
+            String direction,
+            String originAirport,
+            String destAirport,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            String textQuery,
+            int resultCount
+    ) {
+    }
+
     /** Shikoyatlar navbati (§11.2 — /reports). */
     public record ReportRow(
             UUID id,

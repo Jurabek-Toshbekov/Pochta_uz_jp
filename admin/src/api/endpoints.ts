@@ -13,8 +13,10 @@ import type {
   Page,
   PostDailyPoint,
   PostDetail,
+  PostFilters,
   PostRow,
   PriceIndexPoint,
+  Reference,
   ReportRow,
   ReviewStatsPoint,
   RouteDemandSupply,
@@ -23,6 +25,7 @@ import type {
   SettingRow,
   SettingValue,
   SupplyDemandCell,
+  UserAnalytics,
   UserDetail,
   UserRow,
   ZeroResultRoute,
@@ -65,14 +68,7 @@ export const api = {
 
   /* --- E'lonlar --- */
 
-  posts(params: {
-    status?: string;
-    type?: string;
-    direction?: string;
-    search?: string;
-    page?: number;
-    size?: number;
-  }) {
+  posts(params: Partial<PostFilters> & { page?: number; size?: number }) {
     return request<Page<PostRow>>(`${BASE}/posts${query(params)}`);
   },
 
@@ -107,6 +103,14 @@ export const api = {
 
   user(userId: string) {
     return request<UserDetail>(`${BASE}/users/${userId}`);
+  },
+
+  userAnalytics(userId: string) {
+    return request<UserAnalytics>(`${BASE}/users/${userId}/analytics`);
+  },
+
+  reference() {
+    return request<Reference>(`${BASE}/reference`);
   },
 
   blockUser(userId: string, reason: string) {
