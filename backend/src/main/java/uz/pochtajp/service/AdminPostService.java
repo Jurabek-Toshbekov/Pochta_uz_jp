@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,6 +49,13 @@ public class AdminPostService {
 
     private static final int MAX_PAGE_SIZE = 100;
 
+    /** Qidiruv matnidagi e'lon ID'si: yalang'och, `startapp=ch_<id>` yoki butun kanal posti ichida. */
+    private static final Pattern POST_ID = Pattern.compile(
+            "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+
+    /** Kanal postining havolasi: t.me/jpuzbpochta/123 yoki t.me/c/1424117981/123. */
+    private static final Pattern CHANNEL_LINK = Pattern.compile("t\\.me/(?:c/\\d+|[A-Za-z0-9_]+)/(\\d+)");
+
     private final JdbcTemplate jdbc;
     private final PostRepository postRepository;
     private final ModerationActionLogRepository moderationLogRepository;
@@ -85,8 +94,22 @@ public class AdminPostService {
     @Transactional(readOnly = true)
     public AdminDto.Page<AdminDto.PostRow> list(Filter filter) {
         StringBuilder where = new StringBuilder(" WHERE p.deleted_at IS NULL");
-        List<Object> args = new ArrayList<>();
 
+        // Aniq e'lon ko'rsatilgan bo'lsa (ID, deep link, kanal havolasi) — holat va
+        // tur filtrlari e'tiborga olinmaydi: admin aynan shu e'lonni qidiryapti.
+        String search = filter.search() == null ? "" : filter.search().strip();
+        Matcher idMatch = POST_ID.matcher(search);
+        Matcher linkMatch = CHANNEL_LINK.matcher(search);
+        if (idMatch.find()) {
+            return page(new StringBuilder(" WHERE p.id = ?"),
+                    List.of(UUID.fromString(idMatch.group())), filter);
+        }
+        if (linkMatch.find()) {
+            return page(new StringBuilder(" WHERE p.channel_message_id = ?"),
+                    List.of(Long.parseLong(linkMatch.group(1))), filter);
+        }
+
+        List<Object> args = new ArrayList<>();
         if (filter.status() != null && !filter.status().isBlank()) {
             where.append(" AND p.status = ?");
             args.add(filter.status());
@@ -107,7 +130,10 @@ public class AdminPostService {
             args.add(filter.search().strip());
             args.add(filter.search().strip());
         }
+        return page(where, args, filter);
+    }
 
+    private AdminDto.Page<AdminDto.PostRow> page(StringBuilder where, List<Object> args, Filter filter) {
         Long total = jdbc.queryForObject(
                 "SELECT count(*) FROM posts p JOIN users u ON u.id = p.user_id" + where,
                 Long.class, args.toArray());

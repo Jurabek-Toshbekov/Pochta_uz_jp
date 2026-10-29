@@ -59,7 +59,8 @@ export function PostsPage() {
         <Select label="Tur" value={type} options={TYPE_OPTIONS} onChange={(value) => { setType(value); setPage(0); }} />
         <Select label="Yo‘nalish" value={direction} options={DIRECTION_OPTIONS} onChange={(value) => { setDirection(value); setPage(0); }} />
         <input
-          placeholder="username yoki IATA kodi"
+          placeholder="E‘lon havolasi/ID, username yoki IATA"
+          title="Kanal postini to‘liq qo‘yish ham mumkin — ID yoki havola bo‘lsa, holat filtri e’tiborga olinmaydi"
           value={search}
           aria-label="Qidiruv"
           onChange={(event) => {

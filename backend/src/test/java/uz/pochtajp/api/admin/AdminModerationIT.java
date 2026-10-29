@@ -49,6 +49,49 @@ class AdminModerationIT extends AbstractAdminIntegrationTest {
     }
 
     @Test
+    @DisplayName("Kanal postining matni yoki deep link bo'yicha e'lon holat filtridan qat'i nazar topiladi")
+    void findsPostByPastedChannelText() throws Exception {
+        String token = tokenFor(910011L, "MODERATOR");
+        UUID owner = fixtures().insertUser(910111L, "egasi11", "NONE", 0);
+        UUID postId = fixtures().post(owner)
+                .type("CARRY").direction("JP_UZ").route("NRT", "TAS")
+                .departDate(LocalDate.now().plusDays(10))
+                .price("1600", "JPY", "PER_KG")
+                .status("PUBLISHED")
+                .insert();
+        String pasted = "✈️ Pochta olib ketaman\n#JP_UZ #CARRY\n"
+                + "👉 Bog'lanish va batafsil: https://t.me/uzb_jp_elon_bot/app?startapp=ch_" + postId;
+
+        // Panel sukut bo'yicha PENDING ni ko'rsatadi — ID berilganda bu to'sqinlik qilmasligi kerak.
+        mockMvc.perform(get("/api/admin/posts").param("status", "PENDING").param("search", pasted)
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(postId.toString()))
+                .andExpect(jsonPath("$.items[0].status").value("PUBLISHED"));
+    }
+
+    @Test
+    @DisplayName("Kanal havolasi (t.me/kanal/123) bo'yicha e'lon topiladi")
+    void findsPostByChannelLink() throws Exception {
+        String token = tokenFor(910012L, "MODERATOR");
+        UUID owner = fixtures().insertUser(910112L, "egasi12", "NONE", 0);
+        UUID postId = fixtures().post(owner)
+                .type("SEND").direction("UZ_JP").route("TAS", "NRT")
+                .deadlineDate(LocalDate.now().plusDays(10))
+                .status("PUBLISHED")
+                .insert();
+        jdbcTemplate.update("UPDATE posts SET channel_message_id = 4321 WHERE id = ?", postId);
+
+        mockMvc.perform(get("/api/admin/posts").param("status", "PENDING")
+                        .param("search", "https://t.me/jpuzbpochta/4321")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(postId.toString()));
+    }
+
+    @Test
     @DisplayName("Tasdiqlash e'lonni kanalga chiqaradi va jurnalga yozadi")
     void approvePublishesAndLogs() throws Exception {
         String token = tokenFor(910002L, "MODERATOR");
