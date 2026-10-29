@@ -142,6 +142,16 @@ hisoblari shu jadvaldan o'qiladi.
 | `user_blocked` | ADMIN | `target_user_id` |
 | `rate_limit_hit` | **SERVER** | `endpoint`, `limit`, `window_seconds` |
 
+**Admin yozishmasi**
+
+| Event | Manba | Properties |
+|---|---|---|
+| `admin_message_sent` | ADMIN | `target_user_id`, `delivered`, `length` |
+| `admin_message_reply` | BOT | `length` |
+
+> Xabar matni event'ga yozilmaydi — u `admin_messages` jadvalida turadi.
+> Javob faqat admin oxirgi 7 kunda yozgan (va yetkazilgan) bo'lsa qabul qilinadi.
+
 > **Nima uchun `reason` bu yerda yo'q:** sabab matnini moderator qo'lda yozadi va
 > unda telefon yoki ism uchrab qolishi mumkin (§1.7). Shuning uchun erkin matn
 > faqat `moderation_actions` jadvalida saqlanadi, event'da esa ID va turlar
@@ -169,6 +179,7 @@ hisoblari shu jadvaldan o'qiladi.
 | `contact_reveal` (bitim boshlangan payt) | ✅ `PostDetailService` |
 | `post_detail_view`, `contact_click`, `post_share` | ✅ `miniapp/src/pages/PostDetailPage.tsx` |
 | `post_rejected`, `user_blocked` (moderatsiya) | ✅ `AdminPostService`, `AdminUserService` |
+| `admin_message_sent`, `admin_message_reply` | ✅ `AdminMessageService` |
 | `report_submitted` (shikoyat) | ✅ `ReportService` |
 | `review_left` (baho) | ✅ `ReviewService` |
 | `deal_confirmed`, `deal_followup_answer` | ✅ `DealService` |

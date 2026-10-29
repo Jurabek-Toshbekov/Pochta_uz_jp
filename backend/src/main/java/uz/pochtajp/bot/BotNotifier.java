@@ -105,6 +105,16 @@ public class BotNotifier {
     }
 
     /** Qisqa javob — tugma bosilgandan keyin. */
+    /**
+     * Admin panelidan yozilgan xabar. Matn admin kiritgani uchun HTML sifatida
+     * escape qilinadi; sarlavha va "javob yozing" izohi foydalanuvchi tilida.
+     */
+    public boolean sendAdminMessage(User user, String body) {
+        BotTexts.Pack texts = BotTexts.of(user.getUiLanguage());
+        return messenger.sendHtml(user.getTelegramId(),
+                texts.adminMessage().formatted(TelegramHtml.escape(body)), null);
+    }
+
     public void sendPlain(User user, String text) {
         messenger.sendHtml(user.getTelegramId(), text, null);
     }

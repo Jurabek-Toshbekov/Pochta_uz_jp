@@ -216,6 +216,29 @@ export interface UserAnalytics {
   timeline: EventRow[];
 }
 
+/* --- Admin yozishmasi --- */
+
+export interface MessageRow {
+  id: string;
+  direction: 'OUTBOUND' | 'INBOUND';
+  body: string;
+  deliveryStatus: 'SENT' | 'FAILED' | 'RECEIVED';
+  adminId: string | null;
+  adminUsername: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface Conversation {
+  userId: string;
+  username: string | null;
+  displayName: string | null;
+  lastDirection: 'OUTBOUND' | 'INBOUND';
+  lastBody: string | null;
+  lastAt: string;
+  unreadCount: number;
+}
+
 /* --- Reference (filtrlar uchun) --- */
 
 export interface ReferenceAirport {

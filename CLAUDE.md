@@ -684,6 +684,9 @@ Batafsil: /xavfsizlik
 - **Kanal'ga publish qilish.** Post matnini shakllantirib yuboradi, `channel_message_id` ni saqlaydi.
 - **Erkin matnga javob.** Foydalanuvchi shunchaki matn yozsa: "Men buyruqlar bilan ishlayman. E'lon berish uchun quyidagi tugmani bosing." + tugma. **Hech qanday jerkish, hech qanday 😡.**
 - **Media yuborilsa:** "Rasm va fayllarni ilova orqali yuborasiz. Pastdagi tugmani bosing 🙂"
+- **Admin yozishmasi.** Admin paneldan yozilgan xabarni bot yetkazadi. Oxirgi 7 kunda
+  admin yozgan foydalanuvchining erkin matni javob sifatida `admin_messages`ga tushadi
+  va panelda ko'rinadi ("Xabaringiz yetkazildi"). Media saqlanmaydi — faqat `[media]` belgisi.
 
 ### 8.4 Kanal post shabloni
 
@@ -998,6 +1001,11 @@ PATCH  /posts/{id}                 matn maydonlarini tahrirlash
 GET    /users                      ?search=&role=&status=&page=&size=
 GET    /users/{id}                 profil + event lentasi
 GET    /users/{id}/analytics       to'liq profil: kelib chiqishi, faollik, kim kimni ko'rgan (audit'ga yoziladi)
+GET    /users/{id}/messages        bot orqali yozishma (eskisidan yangisiga)
+POST   /users/{id}/messages        xabar yuborish (bot orqali, foydalanuvchi tilida)
+POST   /users/{id}/messages/read   javoblarni o'qilgan deb belgilash
+GET    /messages                   barcha suhbatlar, o'qilmaganlari tepada
+GET    /messages/unread-count      menyudagi belgi uchun
 POST   /users/{id}/block           sabab majburiy
 POST   /users/{id}/unblock
 POST   /users/{id}/verify          NONE | PHONE | DOCUMENT

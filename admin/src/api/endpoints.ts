@@ -4,10 +4,12 @@ import type {
   AuditRow,
   CloseReasonRow,
   CohortRow,
+  Conversation,
   DealConfirmationPoint,
   FunnelStep,
   LoginResponse,
   MatchLatencyPoint,
+  MessageRow,
   NotificationStats,
   Overview,
   Page,
@@ -107,6 +109,28 @@ export const api = {
 
   userAnalytics(userId: string) {
     return request<UserAnalytics>(`${BASE}/users/${userId}/analytics`);
+  },
+
+  /* --- Yozishma --- */
+
+  messages(userId: string) {
+    return request<MessageRow[]>(`${BASE}/users/${userId}/messages`);
+  },
+
+  sendMessage(userId: string, text: string) {
+    return request<MessageRow>(`${BASE}/users/${userId}/messages`, { method: 'POST', body: { text } });
+  },
+
+  markMessagesRead(userId: string) {
+    return request<{ marked: number }>(`${BASE}/users/${userId}/messages/read`, { method: 'POST' });
+  },
+
+  conversations() {
+    return request<Conversation[]>(`${BASE}/messages`);
+  },
+
+  unreadMessages() {
+    return request<{ count: number }>(`${BASE}/messages/unread-count`);
   },
 
   reference() {

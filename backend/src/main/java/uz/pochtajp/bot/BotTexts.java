@@ -66,7 +66,10 @@ public final class BotTexts {
             String dealThanksCancelled,
             String reviewAsk,
             String btnReviewStar,
-            String reviewThanks
+            String reviewThanks,
+            String adminMessage,
+            String adminReplyReceived,
+            String adminReplyTextOnly
     ) {
     }
 
@@ -233,7 +236,15 @@ public final class BotTexts {
             Sherigingiz bilan ish qanday ketdi? Baho boshqalarga
             ishonchli odamni topishda yordam beradi.""",
             "%d ⭐",
-            "Rahmat, bahoyingiz yozildi."
+            "Rahmat, bahoyingiz yozildi.",
+            """
+            📩 <b>Ma'muriyatdan xabar</b>
+
+            %s
+
+            <i>Javob berish uchun shu chatga oddiy xabar yozing.</i>""",
+            "✅ Xabaringiz ma'muriyatga yetkazildi. Tez orada javob beramiz.",
+            "Hozircha faqat matnli xabar yetkaziladi. Iltimos, javobingizni yozib yuboring 🙂"
     );
 
     private static final Pack UZ_CYRL = new Pack(
@@ -399,7 +410,15 @@ public final class BotTexts {
             Шеригингиз билан иш қандай кетди? Баҳо бошқаларга
             ишончли одамни топишда ёрдам беради.""",
             "%d ⭐",
-            "Раҳмат, баҳоингиз ёзилди."
+            "Раҳмат, баҳоингиз ёзилди.",
+            """
+            📩 <b>Маъмуриятдан хабар</b>
+
+            %s
+
+            <i>Жавоб бериш учун шу чатга оддий хабар ёзинг.</i>""",
+            "✅ Хабарингиз маъмуриятга етказилди. Тез орада жавоб берамиз.",
+            "Ҳозирча фақат матнли хабар етказилади. Илтимос, жавобингизни ёзиб юборинг 🙂"
     );
 
     private static final Pack RU = new Pack(
@@ -562,7 +581,15 @@ public final class BotTexts {
             Как прошло дело с вашим партнёром? Оценка помогает другим
             находить надёжных людей.""",
             "%d ⭐",
-            "Спасибо, оценка сохранена."
+            "Спасибо, оценка сохранена.",
+            """
+            📩 <b>Сообщение от администрации</b>
+
+            %s
+
+            <i>Чтобы ответить, просто напишите сообщение в этот чат.</i>""",
+            "✅ Ваше сообщение передано администрации. Скоро ответим.",
+            "Пока доставляются только текстовые сообщения. Пожалуйста, напишите ответ текстом 🙂"
     );
 
     private static final Map<String, Pack> PACKS = Map.of(

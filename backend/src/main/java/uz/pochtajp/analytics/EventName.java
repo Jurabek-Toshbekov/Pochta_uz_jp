@@ -67,6 +67,10 @@ public final class EventName {
     public static final String USER_BLOCKED = "user_blocked";
     public static final String RATE_LIMIT_HIT = "rate_limit_hit";
 
+    // --- Admin yozishmasi ---
+    public static final String ADMIN_MESSAGE_SENT = "admin_message_sent";
+    public static final String ADMIN_MESSAGE_REPLY = "admin_message_reply";
+
     /**
      * Mini App yuborishi mumkin bo'lgan nomlar. Ro'yxatdan tashqarisi qabul
      * qilinmaydi — aks holda analitika "shovqin"ga to'lib ketadi va metrika

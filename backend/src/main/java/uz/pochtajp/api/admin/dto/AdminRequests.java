@@ -37,6 +37,14 @@ public final class AdminRequests {
     ) {
     }
 
+    /** Foydalanuvchiga bot orqali xabar. 3500 — Telegram'ning 4096 chegarasi va sarlavha uchun zaxira. */
+    public record SendMessageRequest(
+            @NotBlank(message = "Xabar matnini yozing.")
+            @Size(max = 3500, message = "Xabar 3500 belgidan oshmasin.")
+            String text
+    ) {
+    }
+
     public record BlockRequest(
             @NotBlank(message = "Bloklash sababini yozing.")
             @Size(max = 500, message = "Sabab 500 belgidan oshmasin.")

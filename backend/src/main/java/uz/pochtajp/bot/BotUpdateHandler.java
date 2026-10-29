@@ -18,6 +18,7 @@ import uz.pochtajp.config.AppProperties;
 import uz.pochtajp.config.BotProperties;
 import uz.pochtajp.domain.enums.EventSource;
 import uz.pochtajp.service.AdminAuthService;
+import uz.pochtajp.service.AdminMessageService;
 import uz.pochtajp.service.DealService;
 import uz.pochtajp.service.ReviewService;
 import uz.pochtajp.service.UserDataService;
@@ -45,6 +46,7 @@ public class BotUpdateHandler {
     private final AdminAuthService adminAuthService;
     private final DealService dealService;
     private final ReviewService reviewService;
+    private final AdminMessageService adminMessageService;
     private final EventLogger eventLogger;
 
     public BotUpdateHandler(UserService userService,
@@ -56,6 +58,7 @@ public class BotUpdateHandler {
                             AdminAuthService adminAuthService,
                             DealService dealService,
                             ReviewService reviewService,
+                            AdminMessageService adminMessageService,
                             EventLogger eventLogger) {
         this.userService = userService;
         this.userDataService = userDataService;
@@ -66,6 +69,7 @@ public class BotUpdateHandler {
         this.adminAuthService = adminAuthService;
         this.dealService = dealService;
         this.reviewService = reviewService;
+        this.adminMessageService = adminMessageService;
         this.eventLogger = eventLogger;
     }
 
@@ -109,12 +113,27 @@ public class BotUpdateHandler {
         long chatId = message.getChatId();
 
         if (hasMedia(message)) {
+            // Admin bilan yozishma ochiq bo'lsa — rasm saqlanmaydi (§15), izohi yetkaziladi.
+            if (adminMessageService.hasOpenConversation(user.getId())) {
+                String caption = message.getCaption();
+                adminMessageService.acceptReply(user.getId(),
+                        "📎 [media]" + (caption == null || caption.isBlank() ? "" : " " + caption));
+                messenger.sendHtml(chatId, texts.adminReplyTextOnly(), null);
+                return;
+            }
             messenger.sendHtml(chatId, texts.media(), keyboards.mainMenu(texts));
             return;
         }
 
         String text = message.hasText() ? message.getText() : null;
         Optional<BotCommand> command = BotCommand.parse(text);
+
+        // Admin yozgan bo'lsa, oddiy matn — unga javob (buyruqlar odatdagidek ishlaydi).
+        if (command.isEmpty() && text != null && !text.startsWith("/")
+                && adminMessageService.acceptReply(user.getId(), text)) {
+            messenger.sendHtml(chatId, texts.adminReplyReceived(), null);
+            return;
+        }
 
         if (command.isEmpty()) {
             // Erkin matn — muloyim javob va tugma. Hech qanday jerkish (§8.3).

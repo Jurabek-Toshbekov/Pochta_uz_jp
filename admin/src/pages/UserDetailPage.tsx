@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { api } from '../api/endpoints';
 import type { DailyCount, UserAnalytics } from '../api/types';
 import { UserActions } from '../components/UserActions';
+import { UserMessages } from '../components/UserMessages';
 import {
   EventBreakdownTable,
   OwnPostsTable,
@@ -91,6 +92,10 @@ function UserAnalyticsView({ data }: { data: UserAnalytics }) {
         <div style={{ marginTop: 16 }}>
           <UserActions user={row} blockedReason={data.blockedReason} />
         </div>
+      </Card>
+
+      <Card title="Xabarlar (bot orqali)">
+        <UserMessages userId={row.id} />
       </Card>
 
       <div className="kpi-grid" style={{ marginBottom: 0 }}>

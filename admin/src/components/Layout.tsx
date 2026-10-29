@@ -1,4 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { NavLink, Outlet } from 'react-router-dom';
+import { api } from '../api/endpoints';
 import { useAuth } from '../auth/AuthContext';
 
 /**
@@ -9,6 +11,7 @@ const LINKS: { to: string; label: string }[] = [
   { to: '/', label: 'Umumiy ko‘rinish' },
   { to: '/posts', label: 'Moderatsiya' },
   { to: '/users', label: 'Foydalanuvchilar' },
+  { to: '/messages', label: 'Xabarlar' },
   { to: '/reports', label: 'Shikoyatlar' },
   { to: '/analytics', label: 'Analitika' },
   { to: '/search-insights', label: 'Qidiruv tahlili' },
@@ -19,6 +22,13 @@ const LINKS: { to: string; label: string }[] = [
 
 export function Layout() {
   const { role, logout } = useAuth();
+  // Foydalanuvchilar javobi kelganini sezish uchun — har 30 soniyada.
+  const unread = useQuery({
+    queryKey: ['admin-unread-messages'],
+    queryFn: api.unreadMessages,
+    refetchInterval: 30_000,
+  });
+  const unreadCount = unread.data?.count ?? 0;
 
   return (
     <div className="shell">
@@ -32,6 +42,9 @@ export function Layout() {
             className={({ isActive }) => `nav__link ${isActive ? 'nav__link--active' : ''}`}
           >
             {link.label}
+            {link.to === '/messages' && unreadCount > 0 && (
+              <span className="nav__count" aria-label={`${unreadCount} ta o‘qilmagan xabar`}>{unreadCount}</span>
+            )}
           </NavLink>
         ))}
         <div className="nav__footer">

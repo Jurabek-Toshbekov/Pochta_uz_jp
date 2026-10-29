@@ -239,6 +239,35 @@ public final class AdminDto {
     ) {
     }
 
+    // ------------------------------------------------------------------
+    // Admin yozishmasi (/users/{id}/messages, /messages)
+    // ------------------------------------------------------------------
+
+    /** Suhbatdagi bitta xabar. OUTBOUND — admin yozgan, INBOUND — foydalanuvchi javobi. */
+    public record MessageRow(
+            UUID id,
+            String direction,
+            String body,
+            String deliveryStatus,
+            UUID adminId,
+            String adminUsername,
+            Instant readAt,
+            Instant createdAt
+    ) {
+    }
+
+    /** Suhbatlar ro'yxatidagi qator: oxirgi xabar va o'qilmaganlar soni. */
+    public record Conversation(
+            UUID userId,
+            String username,
+            String displayName,
+            String lastDirection,
+            String lastBody,
+            Instant lastAt,
+            long unreadCount
+    ) {
+    }
+
     /** Shikoyatlar navbati (§11.2 — /reports). */
     public record ReportRow(
             UUID id,

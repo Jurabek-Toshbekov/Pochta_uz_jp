@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { AuditPage } from './pages/AuditPage';
 import { LoginPage } from './pages/LoginPage';
+import { MessagesPage } from './pages/MessagesPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { PostsPage } from './pages/PostsPage';
@@ -31,6 +32,7 @@ export function App() {
         <Route path="/posts" element={<PostsPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/users/:userId" element={<UserDetailPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/search-insights" element={<SearchInsightsPage />} />
